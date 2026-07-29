@@ -24,6 +24,11 @@ function loadEnv(string $path): void {
 
 // Load .env from project root
 loadEnv(__DIR__ . '/../.env');
+
+// After loading .env, make JWT_SECRET available as a constant
+if (!defined('JWT_SECRET')) {
+    define('JWT_SECRET', getenv('JWT_SECRET') ?: 'change-me');
+}
 /**
  * Bootstrap – database connection, CORS, autoloader, helpers
  */
