@@ -17,7 +17,7 @@ class UserModel
      */
     public function getAllUsers(): array
     {
-        $stmt = $this->db->query("SELECT id, name, email, role, created_at FROM users");
+        $stmt = $this->db->query("SELECT id, first_name, last_name, email, role, department, position, created_at, updated_at FROM users");
         return $stmt->fetchAll();
     }
 
@@ -26,7 +26,7 @@ class UserModel
      */
     public function getAllStaff(): array
     {
-        $stmt = $this->db->prepare("SELECT id, name, email, role, created_at FROM users WHERE role = 'staff'");
+        $stmt = $this->db->prepare("SELECT id, first_name, last_name, email, role, department, position, created_at, updated_at FROM users WHERE role = 'staff'");
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -57,13 +57,16 @@ class UserModel
     public function createUser(array $data): int
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())"
+            "INSERT INTO users (first_name, last_name, email, role, department, position, password) VALUES (?, ?, ?, ?, NOW())"
         );
         $stmt->execute([
-            $data['name'],
+            $data['first_name'],
+            $data['last_name'],
             $data['email'],
+            $data['role'],
+            $data['department'],
+            $data['position'],
             password_hash($data['password'], PASSWORD_BCRYPT),
-            $data['role']
         ]);
         return (int)$this->db->lastInsertId();
     }
@@ -73,7 +76,7 @@ class UserModel
      */
     public function getUserProfile(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT id, name, email, role, created_at FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT id, first_name, last_name, email, role, department, position, created_at, updated_at FROM users WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }

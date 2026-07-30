@@ -16,13 +16,13 @@ class UserController
     }
 
     /**
-     * POST /api/users  (admin only) – create a user (role from body).
+     * POST /api/users (admin only) – create a user.
      */
     public function store(array $input): void
     {
         $this->auth->requireAdmin();
 
-        $required = ['name', 'email', 'password', 'role'];
+        $required = ['first_name', 'last_name', 'email', 'role', 'department', 'position', 'password'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
                 jsonResponse(['error' => "Field '$field' is required"], 400);
@@ -40,10 +40,13 @@ class UserController
         }
 
         $id = $this->userModel->createUser([
-            'name'     => $input['name'],
-            'email'    => $input['email'],
-            'password' => $input['password'],
-            'role'     => $role,
+            'first_name' => $input['first_name'],
+            'last_name'  => $input['last_name'],
+            'email'      => $input['email'],
+            'role'       => $role,
+            'department' => $input['department'],
+            'position'   => $input['position'],
+            'password'   => $input['password'],
         ]);
 
         $user = $this->userModel->getUserProfile($id);
@@ -86,20 +89,24 @@ class UserController
             'role'    => $user['role'],
         ]);
 
+        // Return all non‑sensitive fields
         jsonResponse([
             'success' => true,
             'token'   => $token,
             'user'    => [
-                'id'    => $user['id'],
-                'name'  => $user['name'],
-                'email' => $user['email'],
-                'role'  => $user['role'],
+                'id'         => $user['id'],
+                'first_name' => $user['first_name'],
+                'last_name'  => $user['last_name'],
+                'email'      => $user['email'],
+                'role'       => $user['role'],
+                'department' => $user['department'],
+                'position'   => $user['position'],
             ]
         ]);
     }
 
     /**
-     * GET /api/profile  (any authenticated user)
+     * GET /api/profile (any authenticated user)
      */
     public function getProfile(): void
     {
@@ -113,7 +120,7 @@ class UserController
     }
 
     /**
-     * GET /api/users  (admin only) – all users (test purpose).
+     * GET /api/users (admin only) – all users (test purpose)
      */
     public function index(): void
     {
@@ -123,7 +130,7 @@ class UserController
     }
 
     /**
-     * GET /api/users/staff  (admin only) – all staff.
+     * GET /api/users/staff (admin only) – all staff
      */
     public function staff(): void
     {
