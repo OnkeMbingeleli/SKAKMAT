@@ -4,16 +4,42 @@
  * Routes requests to appropriate view files
  */
 
+session_start();
+
 // Get the requested page
 $page = $_GET['page'] ?? 'login';
 
+if (isset($_GET['token']) && isset($_GET['user'])) {
+    $token = $_GET['token'];
+    $userData = $_GET['user'];
+
+    setcookie('checkmate_token', $token, time() + 3600, '/');
+    setcookie('checkmate_user', $userData, time() + 3600, '/');
+
+    $_COOKIE['checkmate_token'] = $token;
+    $_COOKIE['checkmate_user'] = $userData;
+
+    $decodedUser = json_decode($userData, true);
+    if (is_array($decodedUser)) {
+        $_SESSION['user_role'] = $decodedUser['role'] ?? 'staff';
+        $_SESSION['user_name'] = trim(($decodedUser['first_name'] ?? 'User') . ' ' . ($decodedUser['last_name'] ?? ''));
+    }
+}
+
 // Define available pages
 $pages = [
-    'login' => '../src/views/login.php',
-    'dashboard' => '../src/views/dashboard.php',
-    'attendance-history' => '../src/views/attendance-history.php',
-    'settings' => '../src/views/settings.php',
-    'signup' => '../src/views/signup.php',
+    'login' => __DIR__ . '/../src/views/login.php',
+    'dashboard' => __DIR__ . '/../src/views/dashboard.php',
+    'attendance-history' => __DIR__ . '/../src/views/attendance-history.php',
+    'settings' => __DIR__ . '/../src/views/settings.php',
+    'signup' => __DIR__ . '/../src/views/signup.php',
+    'clock-in-out' => __DIR__ . '/../src/views/staff/clock-in-out.php',
+    'staff-leave' => __DIR__ . '/../src/views/staff/leave.php',
+    'admin-emergency' => __DIR__ . '/../src/views/admin/emergency.php',
+    'admin-employees' => __DIR__ . '/../src/views/admin/employees.php',
+    'admin-leave-requests' => __DIR__ . '/../src/views/admin/leave-requests.php',
+    'admin-qr-code' => __DIR__ . '/../src/views/admin/qr-code.php',
+    'admin-reports' => __DIR__ . '/../src/views/admin/reports.php',
 ];
 
 // Default to login if page not found

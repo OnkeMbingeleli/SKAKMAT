@@ -581,7 +581,7 @@
 </script>
 
 <!-- Login Form Handler + Tab Switching -->
-<script src="/assets/js/login-handler.js"></script>
+<script src="/assets/js/login.js"></script>
 
 
 </body>
