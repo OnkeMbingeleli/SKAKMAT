@@ -498,28 +498,8 @@
     </div>
 </div>
 
-<!-- JavaScript for Tab Switching + Moving Starfield -->
+<!-- JavaScript for Starfield Animation -->
 <script>
-    // ─── TAB SWITCHING ───
-    const tabs = document.querySelectorAll('.tab-btn');
-    const staffPanel = document.getElementById('panelStaff');
-    const adminPanel = document.getElementById('panelAdmin');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-
-            if (this.dataset.tab === 'staff') {
-                staffPanel.classList.add('active');
-                adminPanel.classList.remove('active');
-            } else {
-                adminPanel.classList.add('active');
-                staffPanel.classList.remove('active');
-            }
-        });
-    });
-
     // ─── MOVING STARFIELD ANIMATION ───
     const canvas = document.getElementById('starfield');
     const ctx = canvas.getContext('2d');
@@ -599,6 +579,10 @@
     initStars();
     animateStars();
 </script>
+
+<!-- Login Form Handler + Tab Switching -->
+<script src="/assets/js/login-handler.js"></script>
+
 
 </body>
 </html>
