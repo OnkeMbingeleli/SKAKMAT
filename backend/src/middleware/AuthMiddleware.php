@@ -1,4 +1,5 @@
 <?php
+// Qaasim fvcked up
 namespace App\Middleware;
 
 class AuthMiddleware

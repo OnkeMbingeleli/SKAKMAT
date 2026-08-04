@@ -1,4 +1,5 @@
 <?php
+// Qaasim fvcked up
 // ------------------- Load .env file (no dependencies) -------------------
 function loadEnv(string $path): void {
     if (!file_exists($path)) return;

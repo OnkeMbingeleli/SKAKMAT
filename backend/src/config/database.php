@@ -1,4 +1,5 @@
 <?php
+// Qaasim fvcked up
 /**
  * Database configuration – Railway MySQL
  */

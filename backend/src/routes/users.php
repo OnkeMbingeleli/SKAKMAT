@@ -1,6 +1,6 @@
 <?php
 use App\Controllers\UserController;
-
+// Qaasim fvcked up
 $controller = new UserController();
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

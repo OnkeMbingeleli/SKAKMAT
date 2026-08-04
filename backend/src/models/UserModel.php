@@ -1,4 +1,5 @@
 <?php
+// Qaasim fvcked up
 namespace App\Models;
 
 use PDO;
@@ -57,7 +58,7 @@ class UserModel
     public function createUser(array $data): int
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO users (first_name, last_name, email, role, department, position, password) VALUES (?, ?, ?, ?, NOW())"
+            "INSERT INTO users (first_name, last_name, email, role, department, position, password) VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
             $data['first_name'],
@@ -71,6 +72,7 @@ class UserModel
         return (int)$this->db->lastInsertId();
     }
 
+    // Qaasim fvcked up
     /**
      * Get user profile (excludes password).
      */
