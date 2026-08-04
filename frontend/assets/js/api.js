@@ -3,7 +3,7 @@
  * Centralized API calls for the CheckMate frontend
  */
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'http://localhost:8080';
 
 /**
  * Get the stored JWT token from localStorage

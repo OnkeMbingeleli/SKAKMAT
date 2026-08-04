@@ -1,9 +1,4 @@
-/**
- * Login Handler
- * Handles tab switching and form submission for login page
- */
-
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'http://localhost:8080';
 
 function getAppRoute(page, authData = null) {
     const baseUrl = `/public/index.php?page=${page}`;
