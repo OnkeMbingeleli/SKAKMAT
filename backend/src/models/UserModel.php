@@ -1,5 +1,4 @@
 <?php
-// Qaasim fvcked up
 namespace App\Models;
 
 use PDO;
@@ -14,7 +13,7 @@ class UserModel
     }
 
     /**
-     * Get all users (for testing – no role filter).
+     * Get all users (no role filter).
      */
     public function getAllUsers(): array
     {
@@ -23,7 +22,7 @@ class UserModel
     }
 
     /**
-     * Get all staff members (role = 'staff').
+     * Get all staff members.
      */
     public function getAllStaff(): array
     {
@@ -58,7 +57,8 @@ class UserModel
     public function createUser(array $data): int
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO users (first_name, last_name, email, role, department, position, password) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO users (first_name, last_name, email, role, department, position, password)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
             $data['first_name'],
@@ -72,7 +72,6 @@ class UserModel
         return (int)$this->db->lastInsertId();
     }
 
-    // Qaasim fvcked up
     /**
      * Get user profile (excludes password).
      */
@@ -81,5 +80,34 @@ class UserModel
         $stmt = $this->db->prepare("SELECT id, first_name, last_name, email, role, department, position, created_at, updated_at FROM users WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
+    }
+
+    /**
+     * Update user fields (except password).
+     */
+    public function updateUser(int $id, array $data): bool
+    {
+        $allowed = ['first_name', 'last_name', 'email', 'department', 'position', 'role'];
+        $fields = [];
+        $params = [];
+        foreach ($allowed as $col) {
+            if (array_key_exists($col, $data)) {
+                $fields[] = "$col = ?";
+                $params[] = $data[$col];
+            }
+        }
+        if (empty($fields)) return false;
+        $params[] = $id;
+        $stmt = $this->db->prepare("UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?");
+        return $stmt->execute($params);
+    }
+
+    /**
+     * Update password for a user.
+     */
+    public function updatePassword(int $id, string $hashedPassword): bool
+    {
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        return $stmt->execute([$hashedPassword, $id]);
     }
 }

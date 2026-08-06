@@ -1,25 +1,27 @@
 <?php
 use App\Controllers\UserController;
-// Qaasim fvcked up
+
 $controller = new UserController();
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-// Remove /api prefix if present
 $path = str_replace('/api', '', $path);
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
 
-// ------------------- PUBLIC ROUTES -------------------
+// ------------------- PUBLIC -------------------
 if ($method === 'POST' && $path === '/login') {
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $controller->login($input);
 }
 
-// ------------------- AUTHENTICATED ROUTES -------------------
+// ------------------- AUTHENTICATED -------------------
 if ($method === 'GET' && $path === '/profile') {
     $controller->getProfile();
 }
 
-// ------------------- ADMIN ROUTES -------------------
+if ($method === 'PATCH' && $path === '/profile/password') {
+    $controller->updatePassword($input);
+}
+
+// ------------------- ADMIN -------------------
 if ($method === 'GET' && $path === '/users') {
     $controller->index();
 }
@@ -29,6 +31,13 @@ if ($method === 'GET' && $path === '/users/staff') {
 }
 
 if ($method === 'POST' && $path === '/users') {
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $controller->store($input);
+}
+
+if ($method === 'POST' && $path === '/users/staff') {
+    $controller->createStaff($input);
+}
+
+if ($method === 'PATCH' && preg_match('#^/users/(\d+)$#', $path, $matches)) {
+    $controller->updateUser((int)$matches[1], $input);
 }

@@ -1,5 +1,4 @@
 <?php
-// Qaasim fvcked up
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
@@ -17,7 +16,7 @@ class UserController
     }
 
     /**
-     * POST /api/users (admin only) – create a user.
+     * POST /api/users (admin only) – create a user with explicit role.
      */
     public function store(array $input): void
     {
@@ -52,7 +51,6 @@ class UserController
 
         $user = $this->userModel->getUserProfile($id);
 
-        // Generate token for the new user
         $token = $this->auth->generateToken([
             'user_id' => $user['id'],
             'email'   => $user['email'],
@@ -90,7 +88,6 @@ class UserController
             'role'    => $user['role'],
         ]);
 
-        // Return all non‑sensitive fields
         jsonResponse([
             'success' => true,
             'token'   => $token,
@@ -121,7 +118,7 @@ class UserController
     }
 
     /**
-     * GET /api/users (admin only) – all users (test purpose)
+     * GET /api/users (admin only) – all users
      */
     public function index(): void
     {
@@ -138,5 +135,112 @@ class UserController
         $this->auth->requireAdmin();
         $staff = $this->userModel->getAllStaff();
         jsonResponse(['success' => true, 'data' => $staff]);
+    }
+
+    /**
+     * POST /api/users/staff (admin only) – create a staff member
+     * Password is auto‑generated and returned.
+     */
+    public function createStaff(array $input): void
+    {
+        $this->auth->requireAdmin();
+
+        $required = ['first_name', 'last_name', 'email', 'department', 'position'];
+        foreach ($required as $field) {
+            if (empty($input[$field])) {
+                jsonResponse(['error' => "Field '$field' is required"], 400);
+            }
+        }
+
+        $existing = $this->userModel->findByEmail($input['email']);
+        if ($existing) {
+            jsonResponse(['error' => 'Email already exists'], 409);
+        }
+
+        $generatedPassword = $this->generatePassword(8);
+
+        $id = $this->userModel->createUser([
+            'first_name' => $input['first_name'],
+            'last_name'  => $input['last_name'],
+            'email'      => $input['email'],
+            'role'       => 'staff',
+            'department' => $input['department'],
+            'position'   => $input['position'],
+            'password'   => $generatedPassword,
+        ]);
+
+        $user = $this->userModel->getUserProfile($id);
+
+        jsonResponse([
+            'success'  => true,
+            'message'  => 'Staff member created',
+            'user'     => $user,
+            'password' => $generatedPassword
+        ], 201);
+    }
+
+    /**
+     * PATCH /api/users/{id} (admin only) – update a user
+     */
+    public function updateUser(int $id, array $input): void
+    {
+        $this->auth->requireAdmin();
+
+        $existing = $this->userModel->findById($id);
+        if (!$existing) {
+            jsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $data = [];
+        foreach (['first_name', 'last_name', 'email', 'department', 'position', 'role'] as $field) {
+            if (isset($input[$field])) {
+                $data[$field] = $input[$field];
+            }
+        }
+
+        if (empty($data)) {
+            jsonResponse(['error' => 'No valid fields to update'], 400);
+        }
+
+        $this->userModel->updateUser($id, $data);
+        $user = $this->userModel->getUserProfile($id);
+        jsonResponse(['success' => true, 'user' => $user]);
+    }
+
+    /**
+     * PATCH /api/profile/password – update own password
+     */
+    public function updatePassword(array $input): void
+    {
+        $payload = $this->auth->requireLogin();
+        $userId = $payload['user_id'];
+
+        $oldPassword = $input['old_password'] ?? '';
+        $newPassword = $input['new_password'] ?? '';
+
+        if (empty($oldPassword) || empty($newPassword)) {
+            jsonResponse(['error' => 'Old and new passwords are required'], 400);
+        }
+
+        if (strlen($newPassword) < 8) {
+            jsonResponse(['error' => 'New password must be at least 8 characters'], 400);
+        }
+
+        $user = $this->userModel->findById($userId);
+        if (!$user || !password_verify($oldPassword, $user['password'])) {
+            jsonResponse(['error' => 'Current password is incorrect'], 401);
+        }
+
+        $this->userModel->updatePassword($userId, password_hash($newPassword, PASSWORD_BCRYPT));
+        jsonResponse(['success' => true, 'message' => 'Password updated successfully']);
+    }
+
+    /**
+     * Generate a random password.
+     */
+    private function generatePassword(int $length = 8): string
+    {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
+        return substr(str_shuffle($chars), 0, $length);
     }
 }
