@@ -1,5 +1,3 @@
-const API_URL = 'http://localhost:8080';
-
 function getAppRoute(page, authData = null) {
     const baseUrl = `/public/index.php?page=${page}`;
     if (!authData) {

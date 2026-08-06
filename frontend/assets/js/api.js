@@ -9,7 +9,11 @@ const API_URL = 'http://localhost:8080';
  * Get the stored JWT token from localStorage
  */
 function getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem('token')
+        || localStorage.getItem('checkmate_token')
+        || localStorage.getItem('authToken')
+        || sessionStorage.getItem('token')
+        || '';
 }
 
 /**
@@ -61,7 +65,7 @@ async function login(email, password) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.php';
+    window.location.href = '/public/index.php?page=login';
 }
 
 /**

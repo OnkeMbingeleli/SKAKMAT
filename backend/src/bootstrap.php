@@ -34,6 +34,10 @@ if (!defined('JWT_SECRET')) {
  * Bootstrap – database connection, CORS, autoloader, helpers
  */
 
+$sessionPath = session_save_path();
+if ($sessionPath && !is_writable($sessionPath)) {
+    session_save_path(sys_get_temp_dir());
+}
 session_start();
 
 // ------------------- CORS -----------------------
@@ -42,7 +46,7 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(200);
     exit;
 }

@@ -1,6 +1,31 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    $sessionPath = session_save_path();
+    if ($sessionPath && (!is_dir($sessionPath) || !is_writable($sessionPath))) {
+        session_save_path(sys_get_temp_dir());
+    }
     session_start();
+}
+
+if (empty($_COOKIE['checkmate_token'])) {
+    header('Location: /public/index.php?page=login');
+    exit;
+}
+
+if (isset($_GET['role']) && in_array($_GET['role'], ['admin', 'staff'], true)) {
+    $_SESSION['user_role'] = $_GET['role'];
+}
+
+if (empty($_SESSION['user_role']) && !empty($_COOKIE['checkmate_user'])) {
+    $user = json_decode($_COOKIE['checkmate_user'], true);
+    if ($user) {
+        $_SESSION['user_role'] = $user['role'] ?? 'staff';
+        $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
+    }
+}
+
+if (empty($_SESSION['user_name'])) {
+    $_SESSION['user_name'] = $_SESSION['user_role'] === 'admin' ? 'Admin User' : 'Staff User';
 }
 
 $role = $_SESSION['user_role'] ?? 'staff';
@@ -8,23 +33,23 @@ $name = $_SESSION['user_name'] ?? 'User';
 
 // Staff menu
 $staffMenu = [
-    ['label' => 'Dashboard',          'link' => 'dashboard.php'],
-    ['label' => 'Clock In / Out',     'link' => 'staff/clock-in-out.php'],
-    ['label' => 'Attendance History', 'link' => 'attendance-history.php'],
-    ['label' => 'Leave',              'link' => 'staff/leave.php'],
-    ['label' => 'Settings',           'link' => 'settings.php'],
+    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
+    ['label' => 'Clock In / Out',     'link' => '/public/index.php?page=clock-in-out'],
+    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
+    ['label' => 'Leave',              'link' => '/public/index.php?page=staff-leave'],
+    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
 ];
 
 // Admin menu
 $adminMenu = [
-    ['label' => 'Dashboard',          'link' => 'dashboard.php'],
-    ['label' => 'QR Codes',           'link' => 'admin/qr-code.php'],
-    ['label' => 'Emergency',          'link' => 'admin/emergency.php'],
-    ['label' => 'Employees',          'link' => 'admin/employees.php'],
-    ['label' => 'Attendance History', 'link' => 'attendance-history.php'],
-    ['label' => 'Leave Requests',     'link' => 'admin/leave-requests.php'],
-    ['label' => 'Reports',            'link' => 'admin/reports.php'],
-    ['label' => 'Settings',           'link' => 'settings.php'],
+    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
+    ['label' => 'QR Codes',           'link' => '/public/index.php?page=admin-qr-code'],
+    ['label' => 'Emergency',          'link' => '/public/index.php?page=admin-emergency'],
+    ['label' => 'Employees',          'link' => '/public/index.php?page=admin-employees'],
+    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
+    ['label' => 'Leave Requests',     'link' => '/public/index.php?page=admin-leave-requests'],
+    ['label' => 'Reports',            'link' => '/public/index.php?page=admin-reports'],
+    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
 ];
 
 $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
@@ -42,12 +67,15 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
         <span>ATTENDANCEHUB</span>
     </div>
 
+    <?php $currentPage = $_GET['page'] ?? 'dashboard'; ?>
     <nav class="sidebar-nav">
         <ul>
             <?php foreach ($menu as $item): ?>
-                <?php 
-                    $current = basename($_SERVER['PHP_SELF']);
-                    $active = ($current === basename($item['link'])) ? 'active' : '';
+                <?php
+                    $query = parse_url($item['link'], PHP_URL_QUERY);
+                    parse_str($query ?: '', $params);
+                    $itemPage = $params['page'] ?? '';
+                    $active = ($currentPage === $itemPage) ? 'active' : '';
                 ?>
                 <li class="<?= $active ?>">
                     <a href="<?= htmlspecialchars($item['link']) ?>">
@@ -60,7 +88,7 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 
     <div class="sidebar-footer">
         <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong></p>
-        <a href="logout.php" class="logout-btn">Logout</a>
+        <a href="/public/index.php?page=logout" class="logout-btn">Logout</a>
     </div>
 </aside>
 
@@ -71,7 +99,7 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 <script src="/assets/js/utils/sidebar.js"></script>
 
 <style>
-/* ── same styles as before ── */
+/* same styles as before */
 * { box-sizing: border-box; }
 
 .sidebar-toggle {
@@ -90,11 +118,12 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 }
 
 .sidebar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    width: 260px;
-    height: 100vh;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    min-height: 100vh;
     background: #1e2a3a;
     color: #ecf0f1;
     display: flex;
@@ -198,8 +227,12 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
         display: block;
     }
     .sidebar {
+        position: fixed;
         transform: translateX(-110%);
         width: 280px;
+        height: 100vh;
+        top: 0;
+        left: 0;
     }
     .sidebar.open {
         transform: translateX(0);

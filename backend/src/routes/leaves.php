@@ -1,0 +1,28 @@
+<?php
+use App\Controllers\LeaveController;
+
+$controller = new LeaveController();
+$method = $_SERVER['REQUEST_METHOD'];
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$path = str_replace('/api', '', $path);
+
+if ($method === 'GET' && $path === '/leaves/my') {
+    $controller->my();
+}
+
+if ($method === 'GET' && $path === '/leaves') {
+    $controller->index();
+}
+
+if ($method === 'POST' && $path === '/leaves') {
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    $controller->store($input);
+}
+
+if ($method === 'PATCH' && preg_match('#^/leaves/(\d+)/approve$#', $path, $matches)) {
+    $controller->approve((int)$matches[1]);
+}
+
+if ($method === 'PATCH' && preg_match('#^/leaves/(\d+)/reject$#', $path, $matches)) {
+    $controller->reject((int)$matches[1]);
+}
