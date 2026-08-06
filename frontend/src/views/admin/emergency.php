@@ -1,29 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (empty($_COOKIE['checkmate_token'])) {
-    header('Location: /public/index.php?page=login');
-    exit;
-}
-
-if (!empty($_COOKIE['checkmate_user'])) {
-    $user = json_decode($_COOKIE['checkmate_user'], true);
-    if ($user) {
-        $_SESSION['user_role'] = $user['role'] ?? 'staff';
-        $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
-    }
-}
-
-if (empty($_SESSION['user_role'])) {
-    $_SESSION['user_role'] = 'staff';
-}
-
-if (empty($_SESSION['user_name'])) {
-    $_SESSION['user_name'] = $_SESSION['user_role'] === 'admin' ? 'Admin User' : 'Staff User';
-}
-
 // ============================================================
 // Emergency Roll Call – Single Button + Siren (no "Mark all safe")
 // ============================================================
@@ -50,12 +25,8 @@ $employees = [
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #f5f7fa;
-            color: #1d2a3a;
-        }
-
-        .page-shell {
-            margin-left: 280px;
             padding: 30px 20px;
+            color: #1d2a3a;
         }
 
         .emergency-container {
@@ -393,13 +364,6 @@ $employees = [
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast i { font-size: 16px; color: #6fc9b0; }
 
-        @media (max-width: 768px) {
-            .page-shell {
-                margin-left: 0;
-                padding: 16px;
-            }
-        }
-
         @media (max-width: 650px) {
             .emergency-container { padding: 20px 16px; }
             .header-left h1 { font-size: 19px; }
@@ -419,9 +383,7 @@ $employees = [
     </style>
 </head>
 <body>
-<?php include __DIR__ . '/../partials/sidebar.php'; ?>
 
-<div class="page-shell">
 <div class="emergency-container" id="app">
 
     <!-- HEADER -->
@@ -479,12 +441,10 @@ $employees = [
     </div>
 
 </div>
-</div>
 
 <!-- Toast -->
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg">Done</span></div>
 
-<script src="/assets/js/login.js"></script>
 <script>
 // ============================================================
 // Data from PHP

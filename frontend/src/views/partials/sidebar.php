@@ -3,41 +3,28 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (empty($_COOKIE['checkmate_token'])) {
-    header('Location: /public/index.php?page=login');
-    exit;
-}
-
-if (!empty($_COOKIE['checkmate_user'])) {
-    $user = json_decode($_COOKIE['checkmate_user'], true);
-    if ($user) {
-        $_SESSION['user_role'] = $user['role'] ?? 'staff';
-        $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
-    }
-}
-
 $role = $_SESSION['user_role'] ?? 'staff';
 $name = $_SESSION['user_name'] ?? 'User';
 
 // Staff menu
 $staffMenu = [
-    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
-    ['label' => 'Clock In / Out',     'link' => '/public/index.php?page=clock-in-out'],
-    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
-    ['label' => 'Leave',              'link' => '/public/index.php?page=staff-leave'],
-    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
+    ['label' => 'Dashboard',          'link' => 'dashboard.php'],
+    ['label' => 'Clock In / Out',     'link' => 'staff/clock-in-out.php'],
+    ['label' => 'Attendance History', 'link' => 'attendance-history.php'],
+    ['label' => 'Leave',              'link' => 'staff/leave.php'],
+    ['label' => 'Settings',           'link' => 'settings.php'],
 ];
 
 // Admin menu
 $adminMenu = [
-    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
-    ['label' => 'QR Codes',           'link' => '/public/index.php?page=admin-qr-code'],
-    ['label' => 'Emergency',          'link' => '/public/index.php?page=admin-emergency'],
-    ['label' => 'Employees',          'link' => '/public/index.php?page=admin-employees'],
-    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
-    ['label' => 'Leave Requests',     'link' => '/public/index.php?page=admin-leave-requests'],
-    ['label' => 'Reports',            'link' => '/public/index.php?page=admin-reports'],
-    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
+    ['label' => 'Dashboard',          'link' => 'dashboard.php'],
+    ['label' => 'QR Codes',           'link' => 'admin/qr-code.php'],
+    ['label' => 'Emergency',          'link' => 'admin/emergency.php'],
+    ['label' => 'Employees',          'link' => 'admin/employees.php'],
+    ['label' => 'Attendance History', 'link' => 'attendance-history.php'],
+    ['label' => 'Leave Requests',     'link' => 'admin/leave-requests.php'],
+    ['label' => 'Reports',            'link' => 'admin/reports.php'],
+    ['label' => 'Settings',           'link' => 'settings.php'],
 ];
 
 $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
@@ -73,7 +60,7 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 
     <div class="sidebar-footer">
         <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong></p>
-        <a href="javascript:void(0)" class="logout-btn" onclick="logoutUser(); return false;">Logout</a>
+        <a href="logout.php" class="logout-btn">Logout</a>
     </div>
 </aside>
 
