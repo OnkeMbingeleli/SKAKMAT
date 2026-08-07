@@ -36,12 +36,7 @@ class LeaveRequestModel
      */
     public function getById(int $id): ?array
     {
-        $stmt = $this->db->prepare(
-            "SELECT lr.*, COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Unknown User') AS user_name
-             FROM leave_requests lr
-             LEFT JOIN users u ON u.id = lr.user_id
-             WHERE lr.id = ?"
-        );
+        $stmt = $this->db->prepare("SELECT * FROM leave_requests WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
@@ -51,12 +46,7 @@ class LeaveRequestModel
      */
     public function getByUser(int $userId): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT lr.*, COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Unknown User') AS user_name
-             FROM leave_requests lr
-             LEFT JOIN users u ON u.id = lr.user_id
-             WHERE lr.user_id = ?"
-        );
+        $stmt = $this->db->prepare("SELECT * FROM leave_requests WHERE user_id = ?");
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
@@ -64,20 +54,9 @@ class LeaveRequestModel
     /**
      * Get all leave requests (admin).
      */
-    public function getAll(?string $status = null): array
+    public function getAll(): array
     {
-        $sql = "SELECT lr.*, COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Unknown User') AS user_name
-                FROM leave_requests lr
-                LEFT JOIN users u ON u.id = lr.user_id";
-
-        $params = [];
-        if ($status !== null) {
-            $sql .= " WHERE lr.status = ?";
-            $params[] = $status;
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+        $stmt = $this->db->query("SELECT * FROM leave_requests");
         return $stmt->fetchAll();
     }
 

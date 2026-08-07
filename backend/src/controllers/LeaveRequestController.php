@@ -58,13 +58,9 @@ class LeaveRequestController
     public function index(): void
     {
         $payload = $this->auth->requireLogin();
-        $status = $_GET['status'] ?? null;
 
         if ($payload['role'] === 'admin') {
-            if ($status !== null && !in_array($status, self::VALID_STATUSES, true)) {
-                jsonResponse(['error' => 'Invalid status filter'], 400);
-            }
-            $list = $this->leaveModel->getAll($status);
+            $list = $this->leaveModel->getAll();
         } else {
             $list = $this->leaveModel->getByUser($payload['user_id']);
         }

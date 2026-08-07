@@ -1,9 +1,5 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    $sessionPath = session_save_path();
-    if ($sessionPath && (!is_dir($sessionPath) || !is_writable($sessionPath))) {
-        session_save_path(sys_get_temp_dir());
-    }
     session_start();
 }
 
@@ -12,20 +8,12 @@ if (empty($_COOKIE['checkmate_token'])) {
     exit;
 }
 
-if (isset($_GET['role']) && in_array($_GET['role'], ['admin', 'staff'], true)) {
-    $_SESSION['user_role'] = $_GET['role'];
-}
-
-if (empty($_SESSION['user_role']) && !empty($_COOKIE['checkmate_user'])) {
+if (!empty($_COOKIE['checkmate_user'])) {
     $user = json_decode($_COOKIE['checkmate_user'], true);
     if ($user) {
         $_SESSION['user_role'] = $user['role'] ?? 'staff';
         $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
     }
-}
-
-if (empty($_SESSION['user_name'])) {
-    $_SESSION['user_name'] = $_SESSION['user_role'] === 'admin' ? 'Admin User' : 'Staff User';
 }
 
 $role = $_SESSION['user_role'] ?? 'staff';
@@ -67,15 +55,12 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
         <span>ATTENDANCEHUB</span>
     </div>
 
-    <?php $currentPage = $_GET['page'] ?? 'dashboard'; ?>
     <nav class="sidebar-nav">
         <ul>
             <?php foreach ($menu as $item): ?>
-                <?php
-                    $query = parse_url($item['link'], PHP_URL_QUERY);
-                    parse_str($query ?: '', $params);
-                    $itemPage = $params['page'] ?? '';
-                    $active = ($currentPage === $itemPage) ? 'active' : '';
+                <?php 
+                    $current = basename($_SERVER['PHP_SELF']);
+                    $active = ($current === basename($item['link'])) ? 'active' : '';
                 ?>
                 <li class="<?= $active ?>">
                     <a href="<?= htmlspecialchars($item['link']) ?>">
@@ -87,8 +72,8 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
     </nav>
 
     <div class="sidebar-footer">
-        <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong></p>
-        <a href="/public/index.php?page=logout" class="logout-btn">Logout</a>
+        <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong> (<?= htmlspecialchars(ucfirst($role)) ?>)</p>
+        <a href="javascript:void(0)" class="logout-btn" onclick="logoutUser(); return false;">Logout</a>
     </div>
 </aside>
 
@@ -97,9 +82,18 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 
 <!-- Load external sidebar JS -->
 <script src="/assets/js/utils/sidebar.js"></script>
+<script>
+window.logoutUser = function logoutUser() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    document.cookie = 'checkmate_token=; path=/; max-age=0';
+    document.cookie = 'checkmate_user=; path=/; max-age=0';
+    window.location.replace('/public/index.php?page=login');
+};
+</script>
 
 <style>
-/* same styles as before */
+/* ── same styles as before ── */
 * { box-sizing: border-box; }
 
 .sidebar-toggle {
@@ -118,12 +112,11 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 }
 
 .sidebar {
-    position: sticky;
+    position: fixed;
     top: 0;
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
-    min-height: 100vh;
+    left: 0;
+    width: 260px;
+    height: 100vh;
     background: #1e2a3a;
     color: #ecf0f1;
     display: flex;
@@ -227,12 +220,8 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
         display: block;
     }
     .sidebar {
-        position: fixed;
         transform: translateX(-110%);
         width: 280px;
-        height: 100vh;
-        top: 0;
-        left: 0;
     }
     .sidebar.open {
         transform: translateX(0);

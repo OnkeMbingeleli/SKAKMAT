@@ -1,32 +1,25 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    $sessionPath = session_save_path();
-    if ($sessionPath && (!is_dir($sessionPath) || !is_writable($sessionPath))) {
-        session_save_path(sys_get_temp_dir());
-    }
     session_start();
 }
 
-// Allow switching via URL: ?role=admin or ?role=staff
-if (isset($_GET['role']) && in_array($_GET['role'], ['admin', 'staff'], true)) {
-    $_SESSION['user_role'] = $_GET['role'];
+if (empty($_COOKIE['checkmate_token'])) {
+    header('Location: /public/index.php?page=login');
+    exit;
 }
 
-// Use the authenticated cookie user if available.
-if (empty($_SESSION['user_name']) && !empty($_COOKIE['checkmate_user'])) {
+if (!empty($_COOKIE['checkmate_user'])) {
     $user = json_decode($_COOKIE['checkmate_user'], true);
     if ($user) {
-        $_SESSION['user_role'] = $user['role'] ?? $_SESSION['user_role'] ?? 'staff';
+        $_SESSION['user_role'] = $user['role'] ?? 'staff';
         $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
     }
 }
 
-// Default to staff if not set
 if (empty($_SESSION['user_role'])) {
     $_SESSION['user_role'] = 'staff';
 }
 
-// Default name only when no authenticated user name exists
 if (empty($_SESSION['user_name'])) {
     $_SESSION['user_name'] = $_SESSION['user_role'] === 'admin' ? 'Admin User' : 'Staff User';
 }
@@ -43,6 +36,9 @@ if (empty($_SESSION['user_name'])) {
     <?php include __DIR__ . '/partials/sidebar.php'; ?>
     <div style="margin-left: 280px; padding: 20px;">
         <h1>Dashboard loaded successfully!</h1>
+        <p>Welcome, <?= htmlspecialchars($_SESSION['user_name']) ?></p>
+        <p>Role: <?= htmlspecialchars($_SESSION['user_role']) ?></p>
     </div>
+    <script src="/assets/js/login.js"></script>
 </body>
 </html>
