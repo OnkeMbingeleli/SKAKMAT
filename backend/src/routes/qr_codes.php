@@ -1,22 +1,19 @@
 <?php
+use App\Controllers\QRCodeController;
 
-require_once __DIR__ . '/../controllers/QRCodeController.php';
-
-$db = getDB();
-
-$controller = new QRCodeController($db);
+$controller = new QRCodeController();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-$path = str_replace('/api','',$path);
+$path = str_replace('/api', '', $path);
 
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 /*
 |--------------------------------------------------------------------------
-| POST Generate QR
+| POST Generate QR (admin)
 |--------------------------------------------------------------------------
 */
 
@@ -28,7 +25,7 @@ if ($method === 'POST' && $path === '/qr-codes/generate') {
 
 /*
 |--------------------------------------------------------------------------
-| GET Active QR
+| GET Active QR (admin)
 |--------------------------------------------------------------------------
 */
 
@@ -40,7 +37,7 @@ if ($method === 'GET' && $path === '/qr-codes/active') {
 
 /*
 |--------------------------------------------------------------------------
-| PATCH Use QR
+| PATCH Use QR (admin)
 |--------------------------------------------------------------------------
 */
 

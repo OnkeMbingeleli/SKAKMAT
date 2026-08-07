@@ -1,21 +1,28 @@
 <?php
+namespace App\Controllers;
 
-require_once __DIR__ . '/../models/QRSessionModel.php';
+use App\Middleware\AuthMiddleware;
+use App\Models\QRSessionModel;
 
 class QRSessionController
 {
     private QRSessionModel $session;
+    private AuthMiddleware $auth;
 
-    public function __construct(PDO $db)
+    public function __construct()
     {
-        $this->session = new QRSessionModel($db);
+        $this->session = new QRSessionModel();
+        $this->auth = new AuthMiddleware();
     }
 
-    // POST
-    public function enable(array $input)
+    // POST /api/qr-sessions/enable (admin only)
+    public function enable(array $input): void
     {
+        // created_by is taken from the authenticated admin's token,
+        // never trusted from the request body.
+        $payload = $this->auth->requireAdmin();
+
         if (
-            !isset($input['created_by']) ||
             !isset($input['clock_in_deadline']) ||
             !isset($input['clock_out_deadline'])
         ) {
@@ -26,7 +33,7 @@ class QRSessionController
         }
 
         $id = $this->session->enable(
-            $input['created_by'],
+            $payload['user_id'],
             $input['clock_in_deadline'],
             $input['clock_out_deadline']
         );
@@ -44,9 +51,11 @@ class QRSessionController
         ], 201);
     }
 
-    // PATCH
-    public function disable($id)
+    // PATCH /api/qr-sessions/{id}/disable (admin only)
+    public function disable($id): void
     {
+        $this->auth->requireAdmin();
+
         $success = $this->session->disable($id);
 
         jsonResponse([
@@ -54,11 +63,14 @@ class QRSessionController
         ]);
     }
 
-    // GET
-    public function active()
+    // GET /api/qr-sessions/active (any authenticated user)
+    public function active(): void
     {
-        jsonResponse(
-            $this->session->active()
-        );
+        $this->auth->requireLogin();
+
+        jsonResponse([
+            "success" => true,
+            "data" => $this->session->active()
+        ]);
     }
 }

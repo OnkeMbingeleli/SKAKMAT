@@ -1,10 +1,7 @@
 <?php
+use App\Controllers\AttendanceLogController;
 
-require_once __DIR__ . '/../controllers/AttendanceLogController.php';
-
-$db = getDB();
-
-$controller = new AttendanceLogController($db);
+$controller = new AttendanceLogController();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -16,7 +13,7 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 /*
 |--------------------------------------------------------------------------
-| POST Scan QR & Clock In
+| POST Scan QR & Clock In (authenticated)
 |--------------------------------------------------------------------------
 */
 
@@ -28,7 +25,7 @@ if ($method === 'POST' && $path === '/attendance/scan') {
 
 /*
 |--------------------------------------------------------------------------
-| POST Clock Out
+| POST Clock Out (authenticated; owner or admin)
 |--------------------------------------------------------------------------
 */
 
@@ -40,7 +37,7 @@ if ($method === 'POST' && $path === '/attendance/clock-out') {
 
 /*
 |--------------------------------------------------------------------------
-| GET Present Employees
+| GET Present Employees (admin)
 |--------------------------------------------------------------------------
 */
 

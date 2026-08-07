@@ -1,16 +1,17 @@
 <?php
+namespace App\Models;
 
-require_once __DIR__ . '/QRCodeModel.php';
+use PDO;
 
 class AttendanceLogModel
 {
     private PDO $db;
     private QRCodeModel $qrModel;
 
-    public function __construct(PDO $db)
+    public function __construct(?PDO $db = null)
     {
-        $this->db = $db;
-        $this->qrModel = new QRCodeModel($db);
+        $this->db = $db ?? getDB();
+        $this->qrModel = new QRCodeModel($this->db);
     }
 
     /**
@@ -77,6 +78,8 @@ class AttendanceLogModel
             $qr['id']
         ]);
 
+        $attendanceId = (int)$this->db->lastInsertId();
+
         // Mark current QR as used
         $this->qrModel->use(
             $qr['id'],
@@ -91,7 +94,7 @@ class AttendanceLogModel
         return [
             "success" => true,
             "message" => "Clock in successful.",
-            "attendance_id" => $this->db->lastInsertId(),
+            "attendance_id" => $attendanceId,
             "next_qr" => $nextQr
         ];
     }
@@ -110,6 +113,25 @@ class AttendanceLogModel
         ");
 
         return $stmt->execute([$attendanceId]);
+    }
+
+    /**
+     * Check whether an attendance record belongs to a given user
+     * (used to stop staff from clocking each other out).
+     */
+    public function belongsToUser(int $attendanceId, int $userId): bool
+    {
+        $stmt = $this->db->prepare("
+            SELECT id
+            FROM attendance_logs
+            WHERE id = ?
+            AND user_id = ?
+            LIMIT 1
+        ");
+
+        $stmt->execute([$attendanceId, $userId]);
+
+        return (bool)$stmt->fetch();
     }
 
     /**

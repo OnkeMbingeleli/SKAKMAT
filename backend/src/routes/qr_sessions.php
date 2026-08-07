@@ -1,10 +1,7 @@
 <?php
+use App\Controllers\QRSessionController;
 
-require_once __DIR__ . '/../controllers/QRSessionController.php';
-
-$db = getDB();
-
-$controller = new QRSessionController($db);
+$controller = new QRSessionController();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -15,7 +12,7 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 /*
 |--------------------------------------------------------------------------
-| POST /api/qr-sessions/enable
+| POST /api/qr-sessions/enable (admin)
 |--------------------------------------------------------------------------
 */
 
@@ -27,7 +24,7 @@ if ($method === 'POST' && $path === '/qr-sessions/enable') {
 
 /*
 |--------------------------------------------------------------------------
-| PATCH /api/qr-sessions/{id}/disable
+| PATCH /api/qr-sessions/{id}/disable (admin)
 |--------------------------------------------------------------------------
 */
 
@@ -42,7 +39,7 @@ if (
 
 /*
 |--------------------------------------------------------------------------
-| GET /api/qr-sessions/active
+| GET /api/qr-sessions/active (authenticated)
 |--------------------------------------------------------------------------
 */
 

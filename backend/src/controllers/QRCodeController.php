@@ -1,19 +1,25 @@
 <?php
+namespace App\Controllers;
 
-require_once __DIR__ . '/../models/QRCodeModel.php';
+use App\Middleware\AuthMiddleware;
+use App\Models\QRCodeModel;
 
 class QRCodeController
 {
     private QRCodeModel $qr;
+    private AuthMiddleware $auth;
 
-    public function __construct(PDO $db)
+    public function __construct()
     {
-        $this->qr = new QRCodeModel($db);
+        $this->qr = new QRCodeModel();
+        $this->auth = new AuthMiddleware();
     }
 
-    // POST /api/qr-codes/generate
-    public function generate(array $input)
+    // POST /api/qr-codes/generate (admin only)
+    public function generate(array $input): void
     {
+        $this->auth->requireAdmin();
+
         if (!isset($input['session_id'])) {
             jsonResponse([
                 "success" => false,
@@ -29,18 +35,22 @@ class QRCodeController
         ], 201);
     }
 
-    // GET /api/qr-codes/active
-    public function active()
+    // GET /api/qr-codes/active (admin only)
+    public function active(): void
     {
+        $this->auth->requireAdmin();
+
         jsonResponse([
             "success" => true,
             "data" => $this->qr->active()
         ]);
     }
 
-    // PATCH /api/qr-codes/use
-    public function use(array $input)
+    // PATCH /api/qr-codes/use (admin only)
+    public function use(array $input): void
     {
+        $this->auth->requireAdmin();
+
         if (
             !isset($input['id']) ||
             !isset($input['user_id'])

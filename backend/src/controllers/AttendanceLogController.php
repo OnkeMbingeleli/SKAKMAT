@@ -1,42 +1,46 @@
 <?php
+namespace App\Controllers;
 
-require_once __DIR__ . '/../models/AttendanceLogModel.php';
+use App\Middleware\AuthMiddleware;
+use App\Models\AttendanceLogModel;
 
 class AttendanceLogController
 {
     private AttendanceLogModel $attendance;
+    private AuthMiddleware $auth;
 
-    public function __construct(PDO $db)
+    public function __construct()
     {
-        $this->attendance = new AttendanceLogModel($db);
+        $this->attendance = new AttendanceLogModel();
+        $this->auth = new AuthMiddleware();
     }
 
     /**
-     * POST /api/attendance/scan
+     * POST /api/attendance/scan (authenticated)
      *
      * Body:
      * {
-     *     "token":"xxxxxxxx",
-     *     "user_id":1
+     *     "token":"xxxxxxxx"
      * }
+     *
+     * The clocking-in user is taken from the JWT, never from the
+     * request body, so a staff member can't clock in on someone else's behalf.
      */
-    public function scan(array $input)
+    public function scan(array $input): void
     {
-        if (
-            !isset($input['token']) ||
-            !isset($input['user_id'])
-        ) {
+        $payload = $this->auth->requireLogin();
+        $userId = (int)$payload['user_id'];
 
+        if (!isset($input['token'])) {
             jsonResponse([
                 "success" => false,
-                "message" => "token and user_id are required."
+                "message" => "token is required."
             ], 400);
-
         }
 
         $result = $this->attendance->scan(
             $input['token'],
-            $input['user_id']
+            $userId
         );
 
         if (!$result["success"]) {
@@ -47,22 +51,32 @@ class AttendanceLogController
     }
 
     /**
-     * POST /api/attendance/clock-out
+     * POST /api/attendance/clock-out (authenticated; owner or admin)
      */
-    public function clockOut(array $input)
+    public function clockOut(array $input): void
     {
-        if (!isset($input['attendance_id'])) {
+        $payload = $this->auth->requireLogin();
 
+        if (!isset($input['attendance_id'])) {
             jsonResponse([
                 "success" => false,
                 "message" => "attendance_id is required."
             ], 400);
-
         }
 
-        $success = $this->attendance->clockOut(
-            $input['attendance_id']
-        );
+        $attendanceId = (int)$input['attendance_id'];
+
+        if ($payload['role'] !== 'admin') {
+            $owns = $this->attendance->belongsToUser($attendanceId, (int)$payload['user_id']);
+            if (!$owns) {
+                jsonResponse([
+                    "success" => false,
+                    "message" => "Unauthorized"
+                ], 403);
+            }
+        }
+
+        $success = $this->attendance->clockOut($attendanceId);
 
         jsonResponse([
             "success" => $success
@@ -70,10 +84,12 @@ class AttendanceLogController
     }
 
     /**
-     * GET /api/attendance/present/{sessionId}
+     * GET /api/attendance/present/{sessionId} (admin only)
      */
-    public function presentEmployees($sessionId)
+    public function presentEmployees($sessionId): void
     {
+        $this->auth->requireAdmin();
+
         jsonResponse([
             "success" => true,
             "data" => $this->attendance->getPresentEmployees($sessionId)

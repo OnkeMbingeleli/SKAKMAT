@@ -1,12 +1,15 @@
 <?php
+namespace App\Models;
+
+use PDO;
 
 class QRCodeModel
 {
     private PDO $db;
 
-    public function __construct(PDO $db)
+    public function __construct(?PDO $db = null)
     {
-        $this->db = $db;
+        $this->db = $db ?? getDB();
     }
 
     // Generate a new QR Code
@@ -52,7 +55,7 @@ class QRCodeModel
             LIMIT 1
         ";
 
-        return $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
+        return $this->db->query($sql)->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     // Find an active QR Code by token
@@ -69,7 +72,7 @@ class QRCodeModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$token]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     // Mark QR Code as used

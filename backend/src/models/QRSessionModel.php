@@ -1,12 +1,15 @@
 <?php
+namespace App\Models;
+
+use PDO;
 
 class QRSessionModel
 {
     private PDO $db;
 
-    public function __construct(PDO $db)
+    public function __construct(?PDO $db = null)
     {
-        $this->db = $db;
+        $this->db = $db ?? getDB();
     }
 
     // Enable today's QR Session
@@ -86,6 +89,6 @@ class QRSessionModel
             LIMIT 1
         ");
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 }
