@@ -1,5 +1,5 @@
 <?php
-// Qaasim fvcked up
+// JWT-style auth: issue/validate tokens, gate routes by login/admin role.
 namespace App\Middleware;
 
 class AuthMiddleware

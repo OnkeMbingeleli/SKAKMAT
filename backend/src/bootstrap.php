@@ -1,5 +1,6 @@
 <?php
-// Qaasim fvcked up
+// App bootstrap: env loading, session/CORS setup, DB connection, autoloader, helpers.
+
 // ------------------- Load .env file (no dependencies) -------------------
 function loadEnv(string $path): void {
     if (!file_exists($path)) return;

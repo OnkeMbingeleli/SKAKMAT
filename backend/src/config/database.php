@@ -1,8 +1,5 @@
 <?php
-// Qaasim fvcked up
-/**
- * Database configuration – Railway MySQL
- */
+// DB config: reads Railway MySQL credentials from environment.
 return [
     'host'     => getenv('MYSQLHOST'),
     'port'     => getenv('MYSQLPORT'),

@@ -8,13 +8,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Remove /api prefix if present
 $path = str_replace('/api', '', $path);
 
-$input = [];
-if (
-    ($method === 'POST' && $path === '/leave-requests') ||
-    ($method === 'PATCH' && preg_match('#^/leave-requests/(\d+)$#', $path))
-) {
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
-}
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 // POST /api/leave-requests – create
 if ($method === 'POST' && $path === '/leave-requests') {

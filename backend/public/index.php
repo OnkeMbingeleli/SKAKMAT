@@ -1,9 +1,8 @@
 <?php
+// Front controller: bootstraps the app and dispatches to route files.
 require_once __DIR__ . '/../src/bootstrap.php';
-// Qaasim fvcked up
-// =============================================
-// TEST ROUTE – Database connectivity check
-// =============================================
+
+// Database connectivity check
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
