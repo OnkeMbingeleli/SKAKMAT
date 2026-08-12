@@ -6,7 +6,7 @@
 const CONFIG = {
     API_URL: process.env.NODE_ENV === 'production' 
         ? 'https://api.checkmate.app'  // Update with your production URL
-        : 'http://localhost:8080',
+        : 'http://127.0.0.1:8000',
     
     STORAGE_PREFIX: 'checkmate_',
     TOKEN_KEY: 'token',

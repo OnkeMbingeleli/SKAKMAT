@@ -8,7 +8,17 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 $path = str_replace('/api', '', $path);
 
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
+
+if ($rawInput !== '' && !is_array($input)) {
+    jsonResponse([
+        "success" => false,
+        "message" => "Invalid JSON body."
+    ], 400);
+}
+
+$input = $input ?? [];
 
 /*
 |--------------------------------------------------------------------------
