@@ -31,7 +31,7 @@ ob_start();
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
 const API_BASE = 'http://localhost:8080';
 const TOKEN_KEY = 'token';
@@ -95,18 +95,20 @@ function renderQr(token) {
     }
 
     if (window.QRCode) {
-        QRCode.toCanvas(qrDisplay, token, {
+        QRCode.toDataURL(token, {
             width: 220,
             margin: 2,
             color: {
                 dark: '#0f172a',
                 light: '#ffffff'
             }
-        }, function(error) {
+        }, function(error, url) {
             if (error) {
                 console.error('QR render error:', error);
                 qrDisplay.innerHTML = '<div style="color:#94A3B8; font-size:14px;">Unable to render QR code</div>';
+                return;
             }
+            qrDisplay.innerHTML = `<img src="${url}" width="220" height="220" alt="QR code" />`;
         });
     } else {
         qrDisplay.innerHTML = '<div style="color:#94A3B8; font-size:14px;">QR library not loaded</div>';
@@ -164,8 +166,12 @@ async function generateQRCode() {
 
     try {
         const now = new Date();
-        const clockInDeadline = new Date(now.getTime() + 30 * 60000).toISOString();
-        const clockOutDeadline = new Date(now.getTime() + 8 * 60 * 60000).toISOString();
+
+        // Backend columns are TIME, not full ISO datetimes — send HH:MM:SS.
+        const toTimeString = (d) => d.toTimeString().slice(0, 8);
+
+        const clockInDeadline = toTimeString(new Date(now.getTime() + 30 * 60000));
+        const clockOutDeadline = toTimeString(new Date(now.getTime() + 8 * 60 * 60000));
 
         let sessionResponse;
         try {

@@ -55,7 +55,7 @@ $notifications = [
                 <div style="line-height:1.1;">
                     <div style="font-size:13px; font-weight:600;"><?= $user['user_name'] ?? 'User' ?></div>
                     <div style="font-size:11px; color:var(--muted);">
-                        <?= $user['user_role'] === 'admin' ? 'Administrator' : ($user['department'] ?? 'Staff') ?>
+                        <?= ($user['user_role'] ?? 'staff') === 'admin' ? 'Administrator' : ($user['department'] ?? 'Staff') ?>
                     </div>
                 </div>
                 <span>▼</span>
