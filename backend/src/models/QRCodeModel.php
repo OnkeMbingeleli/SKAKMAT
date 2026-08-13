@@ -1,12 +1,24 @@
 <?php
+<<<<<<< HEAD
+=======
+namespace App\Models;
+
+use PDO;
+>>>>>>> origin/PortReferencingUpdate
 
 class QRCodeModel
 {
     private PDO $db;
 
+<<<<<<< HEAD
     public function __construct(PDO $db)
     {
         $this->db = $db;
+=======
+    public function __construct(?PDO $db = null)
+    {
+        $this->db = $db ?? getDB();
+>>>>>>> origin/PortReferencingUpdate
     }
 
     // Generate a new QR Code
@@ -52,7 +64,11 @@ class QRCodeModel
             LIMIT 1
         ";
 
+<<<<<<< HEAD
         return $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
+=======
+        return $this->db->query($sql)->fetch(PDO::FETCH_ASSOC) ?: null;
+>>>>>>> origin/PortReferencingUpdate
     }
 
     // Find an active QR Code by token
@@ -69,7 +85,11 @@ class QRCodeModel
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$token]);
 
+<<<<<<< HEAD
         return $stmt->fetch(PDO::FETCH_ASSOC);
+=======
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+>>>>>>> origin/PortReferencingUpdate
     }
 
     // Mark QR Code as used
@@ -91,4 +111,8 @@ class QRCodeModel
             $id
         ]);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/PortReferencingUpdate

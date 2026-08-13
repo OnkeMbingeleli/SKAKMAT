@@ -101,7 +101,10 @@ class UserModel
         $stmt = $this->db->prepare("UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?");
         return $stmt->execute($params);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/PortReferencingUpdate
     /**
      * Update password for a user.
      */

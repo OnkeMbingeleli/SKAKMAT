@@ -1,12 +1,24 @@
 <?php
+<<<<<<< HEAD
+=======
+namespace App\Models;
+
+use PDO;
+>>>>>>> origin/PortReferencingUpdate
 
 class QRSessionModel
 {
     private PDO $db;
 
+<<<<<<< HEAD
     public function __construct(PDO $db)
     {
         $this->db = $db;
+=======
+    public function __construct(?PDO $db = null)
+    {
+        $this->db = $db ?? getDB();
+>>>>>>> origin/PortReferencingUpdate
     }
 
     // Enable today's QR Session
@@ -86,6 +98,12 @@ class QRSessionModel
             LIMIT 1
         ");
 
+<<<<<<< HEAD
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
+=======
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+}
+>>>>>>> origin/PortReferencingUpdate

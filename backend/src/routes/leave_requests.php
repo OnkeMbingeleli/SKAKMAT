@@ -8,7 +8,21 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Remove /api prefix if present
 $path = str_replace('/api', '', $path);
 
+<<<<<<< HEAD
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
+=======
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
+
+if ($rawInput !== '' && !is_array($input)) {
+    jsonResponse([
+        "success" => false,
+        "message" => "Invalid JSON body."
+    ], 400);
+}
+
+$input = $input ?? [];
+>>>>>>> origin/PortReferencingUpdate
 
 // POST /api/leave-requests – create
 if ($method === 'POST' && $path === '/leave-requests') {

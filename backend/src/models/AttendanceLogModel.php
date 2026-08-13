@@ -1,16 +1,29 @@
 <?php
+<<<<<<< HEAD
 
 require_once __DIR__ . '/QRCodeModel.php';
+=======
+namespace App\Models;
+
+use PDO;
+>>>>>>> origin/PortReferencingUpdate
 
 class AttendanceLogModel
 {
     private PDO $db;
     private QRCodeModel $qrModel;
 
+<<<<<<< HEAD
     public function __construct(PDO $db)
     {
         $this->db = $db;
         $this->qrModel = new QRCodeModel($db);
+=======
+    public function __construct(?PDO $db = null)
+    {
+        $this->db = $db ?? getDB();
+        $this->qrModel = new QRCodeModel($this->db);
+>>>>>>> origin/PortReferencingUpdate
     }
 
     /**
@@ -77,6 +90,11 @@ class AttendanceLogModel
             $qr['id']
         ]);
 
+<<<<<<< HEAD
+=======
+        $attendanceId = (int)$this->db->lastInsertId();
+
+>>>>>>> origin/PortReferencingUpdate
         // Mark current QR as used
         $this->qrModel->use(
             $qr['id'],
@@ -91,7 +109,11 @@ class AttendanceLogModel
         return [
             "success" => true,
             "message" => "Clock in successful.",
+<<<<<<< HEAD
             "attendance_id" => $this->db->lastInsertId(),
+=======
+            "attendance_id" => $attendanceId,
+>>>>>>> origin/PortReferencingUpdate
             "next_qr" => $nextQr
         ];
     }
@@ -113,6 +135,55 @@ class AttendanceLogModel
     }
 
     /**
+<<<<<<< HEAD
+=======
+     * Check whether an attendance record belongs to a given user
+     * (used to stop staff from clocking each other out).
+     */
+    public function belongsToUser(int $attendanceId, int $userId): bool
+    {
+        $stmt = $this->db->prepare("
+            SELECT id
+            FROM attendance_logs
+            WHERE id = ?
+            AND user_id = ?
+            LIMIT 1
+        ");
+
+        $stmt->execute([$attendanceId, $userId]);
+
+        return (bool)$stmt->fetch();
+    }
+
+    /**
+     * Today's attendance record for a given user (if any).
+     * Used by the staff clock-in/out screen to know current state.
+     */
+    public function getTodayForUser(int $userId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                attendance_logs.id,
+                attendance_logs.session_id,
+                attendance_logs.status,
+                attendance_logs.clock_in_at,
+                attendance_logs.clock_out_at
+            FROM attendance_logs
+            INNER JOIN qr_sessions
+                ON qr_sessions.id = attendance_logs.session_id
+            WHERE attendance_logs.user_id = ?
+            AND qr_sessions.date = CURDATE()
+            ORDER BY attendance_logs.id DESC
+            LIMIT 1
+        ");
+
+        $stmt->execute([$userId]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
+>>>>>>> origin/PortReferencingUpdate
      * Present employees
      */
     public function getPresentEmployees($sessionId)
@@ -137,4 +208,8 @@ class AttendanceLogModel
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/PortReferencingUpdate

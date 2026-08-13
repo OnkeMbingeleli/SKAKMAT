@@ -1,8 +1,16 @@
 <?php
+<<<<<<< HEAD
 // Front controller: bootstraps the app and dispatches to route files.
 require_once __DIR__ . '/../src/bootstrap.php';
 
 // Database connectivity check
+=======
+require_once __DIR__ . '/../src/bootstrap.php';
+
+// =============================================
+// TEST ROUTE – Database connectivity check
+// =============================================
+>>>>>>> origin/PortReferencingUpdate
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 

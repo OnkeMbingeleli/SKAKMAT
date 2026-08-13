@@ -21,8 +21,16 @@ if (isset($_GET['token']) && isset($_GET['user'])) {
 
     $decodedUser = json_decode($userData, true);
     if (is_array($decodedUser)) {
+<<<<<<< HEAD
         $_SESSION['user_role'] = $decodedUser['role'] ?? 'staff';
         $_SESSION['user_name'] = trim(($decodedUser['first_name'] ?? 'User') . ' ' . ($decodedUser['last_name'] ?? ''));
+=======
+        $_SESSION['user_id']     = $decodedUser['id'] ?? null;
+        $_SESSION['user_role']   = $decodedUser['role'] ?? 'staff';
+        $_SESSION['user_name']   = trim(($decodedUser['first_name'] ?? 'User') . ' ' . ($decodedUser['last_name'] ?? ''));
+        $_SESSION['user_email']  = $decodedUser['email'] ?? null;
+        $_SESSION['department']  = $decodedUser['department'] ?? null;
+>>>>>>> origin/PortReferencingUpdate
     }
 }
 
