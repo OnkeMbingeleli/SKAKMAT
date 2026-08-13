@@ -135,6 +135,33 @@ class AttendanceLogModel
     }
 
     /**
+     * Today's attendance record for a given user (if any).
+     * Used by the staff clock-in/out screen to know current state.
+     */
+    public function getTodayForUser(int $userId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                attendance_logs.id,
+                attendance_logs.session_id,
+                attendance_logs.status,
+                attendance_logs.clock_in_at,
+                attendance_logs.clock_out_at
+            FROM attendance_logs
+            INNER JOIN qr_sessions
+                ON qr_sessions.id = attendance_logs.session_id
+            WHERE attendance_logs.user_id = ?
+            AND qr_sessions.date = CURDATE()
+            ORDER BY attendance_logs.id DESC
+            LIMIT 1
+        ");
+
+        $stmt->execute([$userId]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
      * Present employees
      */
     public function getPresentEmployees($sessionId)

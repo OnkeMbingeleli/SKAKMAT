@@ -84,6 +84,20 @@ class AttendanceLogController
     }
 
     /**
+     * GET /api/attendance/mine (authenticated)
+     * Today's attendance record for the logged-in user, if any.
+     */
+    public function mine(): void
+    {
+        $payload = $this->auth->requireLogin();
+
+        jsonResponse([
+            "success" => true,
+            "data" => $this->attendance->getTodayForUser((int)$payload['user_id'])
+        ]);
+    }
+
+    /**
      * GET /api/attendance/present/{sessionId} (admin only)
      */
     public function presentEmployees($sessionId): void
