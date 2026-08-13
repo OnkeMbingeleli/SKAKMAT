@@ -1,10 +1,5 @@
 <?php
-<<<<<<< HEAD
-// App bootstrap: env loading, session/CORS setup, DB connection, autoloader, helpers.
-
-=======
 // Qaasim fvcked up
->>>>>>> origin/PortReferencingUpdate
 // ------------------- Load .env file (no dependencies) -------------------
 function loadEnv(string $path): void {
     if (!file_exists($path)) return;
@@ -39,13 +34,6 @@ if (!defined('JWT_SECRET')) {
  * Bootstrap – database connection, CORS, autoloader, helpers
  */
 
-<<<<<<< HEAD
-$sessionPath = session_save_path();
-if ($sessionPath && !is_writable($sessionPath)) {
-    session_save_path(sys_get_temp_dir());
-}
-=======
->>>>>>> origin/PortReferencingUpdate
 session_start();
 
 // ------------------- CORS -----------------------
@@ -54,11 +42,7 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json');
 
-<<<<<<< HEAD
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-=======
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
->>>>>>> origin/PortReferencingUpdate
     http_response_code(200);
     exit;
 }
@@ -102,8 +86,4 @@ function jsonResponse($data, int $code = 200): void {
     http_response_code($code);
     echo json_encode($data);
     exit;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/PortReferencingUpdate

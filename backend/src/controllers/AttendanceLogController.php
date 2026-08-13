@@ -1,46 +1,12 @@
 <?php
-<<<<<<< HEAD
-
-require_once __DIR__ . '/../models/AttendanceLogModel.php';
-=======
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\AttendanceLogModel;
->>>>>>> origin/PortReferencingUpdate
 
 class AttendanceLogController
 {
     private AttendanceLogModel $attendance;
-<<<<<<< HEAD
-
-    public function __construct(PDO $db)
-    {
-        $this->attendance = new AttendanceLogModel($db);
-    }
-
-    /**
-     * POST /api/attendance/scan
-     *
-     * Body:
-     * {
-     *     "token":"xxxxxxxx",
-     *     "user_id":1
-     * }
-     */
-    public function scan(array $input)
-    {
-        if (
-            !isset($input['token']) ||
-            !isset($input['user_id'])
-        ) {
-
-            jsonResponse([
-                "success" => false,
-                "message" => "token and user_id are required."
-            ], 400);
-
-=======
     private AuthMiddleware $auth;
 
     public function __construct()
@@ -70,16 +36,11 @@ class AttendanceLogController
                 "success" => false,
                 "message" => "token is required."
             ], 400);
->>>>>>> origin/PortReferencingUpdate
         }
 
         $result = $this->attendance->scan(
             $input['token'],
-<<<<<<< HEAD
-            $input['user_id']
-=======
             $userId
->>>>>>> origin/PortReferencingUpdate
         );
 
         if (!$result["success"]) {
@@ -90,14 +51,6 @@ class AttendanceLogController
     }
 
     /**
-<<<<<<< HEAD
-     * POST /api/attendance/clock-out
-     */
-    public function clockOut(array $input)
-    {
-        if (!isset($input['attendance_id'])) {
-
-=======
      * POST /api/attendance/clock-out (authenticated; owner or admin)
      */
     public function clockOut(array $input): void
@@ -105,19 +58,10 @@ class AttendanceLogController
         $payload = $this->auth->requireLogin();
 
         if (!isset($input['attendance_id'])) {
->>>>>>> origin/PortReferencingUpdate
             jsonResponse([
                 "success" => false,
                 "message" => "attendance_id is required."
             ], 400);
-<<<<<<< HEAD
-
-        }
-
-        $success = $this->attendance->clockOut(
-            $input['attendance_id']
-        );
-=======
         }
 
         $attendanceId = (int)$input['attendance_id'];
@@ -133,7 +77,6 @@ class AttendanceLogController
         }
 
         $success = $this->attendance->clockOut($attendanceId);
->>>>>>> origin/PortReferencingUpdate
 
         jsonResponse([
             "success" => $success
@@ -141,12 +84,6 @@ class AttendanceLogController
     }
 
     /**
-<<<<<<< HEAD
-     * GET /api/attendance/present/{sessionId}
-     */
-    public function presentEmployees($sessionId)
-    {
-=======
      * GET /api/attendance/mine (authenticated)
      * Today's attendance record for the logged-in user, if any.
      */
@@ -167,14 +104,9 @@ class AttendanceLogController
     {
         $this->auth->requireAdmin();
 
->>>>>>> origin/PortReferencingUpdate
         jsonResponse([
             "success" => true,
             "data" => $this->attendance->getPresentEmployees($sessionId)
         ]);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/PortReferencingUpdate

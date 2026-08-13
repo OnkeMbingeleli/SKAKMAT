@@ -1,29 +1,17 @@
 <?php
-<<<<<<< HEAD
-
-require_once __DIR__ . '/QRCodeModel.php';
-=======
 namespace App\Models;
 
 use PDO;
->>>>>>> origin/PortReferencingUpdate
 
 class AttendanceLogModel
 {
     private PDO $db;
     private QRCodeModel $qrModel;
 
-<<<<<<< HEAD
-    public function __construct(PDO $db)
-    {
-        $this->db = $db;
-        $this->qrModel = new QRCodeModel($db);
-=======
     public function __construct(?PDO $db = null)
     {
         $this->db = $db ?? getDB();
         $this->qrModel = new QRCodeModel($this->db);
->>>>>>> origin/PortReferencingUpdate
     }
 
     /**
@@ -90,11 +78,8 @@ class AttendanceLogModel
             $qr['id']
         ]);
 
-<<<<<<< HEAD
-=======
         $attendanceId = (int)$this->db->lastInsertId();
 
->>>>>>> origin/PortReferencingUpdate
         // Mark current QR as used
         $this->qrModel->use(
             $qr['id'],
@@ -109,11 +94,7 @@ class AttendanceLogModel
         return [
             "success" => true,
             "message" => "Clock in successful.",
-<<<<<<< HEAD
-            "attendance_id" => $this->db->lastInsertId(),
-=======
             "attendance_id" => $attendanceId,
->>>>>>> origin/PortReferencingUpdate
             "next_qr" => $nextQr
         ];
     }
@@ -135,8 +116,6 @@ class AttendanceLogModel
     }
 
     /**
-<<<<<<< HEAD
-=======
      * Check whether an attendance record belongs to a given user
      * (used to stop staff from clocking each other out).
      */
@@ -183,7 +162,6 @@ class AttendanceLogModel
     }
 
     /**
->>>>>>> origin/PortReferencingUpdate
      * Present employees
      */
     public function getPresentEmployees($sessionId)
@@ -208,8 +186,4 @@ class AttendanceLogModel
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/PortReferencingUpdate

@@ -1,30 +1,12 @@
 <?php
-<<<<<<< HEAD
-
-require_once __DIR__ . '/../models/QRSessionModel.php';
-=======
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\QRSessionModel;
->>>>>>> origin/PortReferencingUpdate
 
 class QRSessionController
 {
     private QRSessionModel $session;
-<<<<<<< HEAD
-
-    public function __construct(PDO $db)
-    {
-        $this->session = new QRSessionModel($db);
-    }
-
-    // POST
-    public function enable(array $input)
-    {
-        if (
-            !isset($input['created_by']) ||
-=======
     private AuthMiddleware $auth;
 
     public function __construct()
@@ -41,7 +23,6 @@ class QRSessionController
         $payload = $this->auth->requireAdmin();
 
         if (
->>>>>>> origin/PortReferencingUpdate
             !isset($input['clock_in_deadline']) ||
             !isset($input['clock_out_deadline'])
         ) {
@@ -52,11 +33,7 @@ class QRSessionController
         }
 
         $id = $this->session->enable(
-<<<<<<< HEAD
-            $input['created_by'],
-=======
             $payload['user_id'],
->>>>>>> origin/PortReferencingUpdate
             $input['clock_in_deadline'],
             $input['clock_out_deadline']
         );
@@ -74,17 +51,11 @@ class QRSessionController
         ], 201);
     }
 
-<<<<<<< HEAD
-    // PATCH
-    public function disable($id)
-    {
-=======
     // PATCH /api/qr-sessions/{id}/disable (admin only)
     public function disable($id): void
     {
         $this->auth->requireAdmin();
 
->>>>>>> origin/PortReferencingUpdate
         $success = $this->session->disable($id);
 
         jsonResponse([
@@ -92,16 +63,6 @@ class QRSessionController
         ]);
     }
 
-<<<<<<< HEAD
-    // GET
-    public function active()
-    {
-        jsonResponse(
-            $this->session->active()
-        );
-    }
-}
-=======
     // GET /api/qr-sessions/active (any authenticated user)
     public function active(): void
     {
@@ -113,4 +74,3 @@ class QRSessionController
         ]);
     }
 }
->>>>>>> origin/PortReferencingUpdate

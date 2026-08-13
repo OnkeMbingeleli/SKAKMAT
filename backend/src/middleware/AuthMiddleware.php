@@ -1,8 +1,4 @@
 <?php
-<<<<<<< HEAD
-// JWT-style auth: issue/validate tokens, gate routes by login/admin role.
-=======
->>>>>>> origin/PortReferencingUpdate
 namespace App\Middleware;
 
 class AuthMiddleware
