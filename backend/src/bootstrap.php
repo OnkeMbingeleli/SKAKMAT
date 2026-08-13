@@ -65,6 +65,12 @@ function getDB(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
+
+        // Server's default session timezone is UTC, but the app runs in
+        // SAST (UTC+2) — without this, every NOW() call (emergency
+        // start/end, marked_safe_at, attendance timestamps, etc.) gets
+        // written 2 hours behind local time.
+        $pdo->exec("SET time_zone = '+02:00'");
     }
     return $pdo;
 }
