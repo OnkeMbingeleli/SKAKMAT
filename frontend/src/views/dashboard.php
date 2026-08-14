@@ -1,3 +1,7 @@
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -34,6 +38,7 @@ if (empty($_SESSION['user_name'])) {
 </head>
 <body>
     <?php include __DIR__ . '/partials/sidebar.php'; ?>
+    <?php include __DIR__ . '/partials/header.php'; ?>
     <div style="margin-left: 280px; padding: 20px;">
         <h1>Dashboard loaded successfully!</h1>
         <p>Welcome, <?= htmlspecialchars($_SESSION['user_name']) ?></p>
@@ -41,8 +46,4 @@ if (empty($_SESSION['user_name'])) {
     </div>
     <script src="/assets/js/login.js"></script>
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> origin/PortReferencingUpdate
