@@ -9,17 +9,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 $path = str_replace('/api', '', $path);
 
-$rawInput = file_get_contents('php://input');
-$input = json_decode($rawInput, true);
-
-if ($rawInput !== '' && !is_array($input)) {
-    jsonResponse([
-        "success" => false,
-        "message" => "Invalid JSON body."
-    ], 400);
-}
-
-$input = $input ?? [];
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 /*
 |--------------------------------------------------------------------------
@@ -47,18 +37,6 @@ if ($method === 'POST' && $path === '/attendance/clock-out') {
 
 /*
 |--------------------------------------------------------------------------
-| GET My Attendance Today (authenticated)
-|--------------------------------------------------------------------------
-*/
-
-if ($method === 'GET' && $path === '/attendance/mine') {
-
-    $controller->mine();
-
-}
-
-/*
-|--------------------------------------------------------------------------
 | GET Present Employees (admin)
 |--------------------------------------------------------------------------
 */
@@ -72,14 +50,20 @@ if (
 
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET /api/attendance/mine (authenticated)
-|--------------------------------------------------------------------------
-*/
+if (
+    $method === 'GET' &&
+    preg_match('#^/attendance/records$#', $path)
+) {
 
-if ($method === 'GET' && $path === '/attendance/mine') {
+    $controller->getAllAttendanceRecords();
 
-    $controller->mine();
+}
+
+if (
+    $method === 'GET' &&
+    preg_match('#^/attendance/records/staff/(\d+)$#', $path)
+) {
+
+    $controller->getMyAttendanceRecords();
 
 }

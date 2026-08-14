@@ -135,33 +135,6 @@ class AttendanceLogModel
     }
 
     /**
-     * Today's attendance record for a given user (if any).
-     * Used by the staff clock-in/out screen to know current state.
-     */
-    public function getTodayForUser(int $userId): ?array
-    {
-        $stmt = $this->db->prepare("
-            SELECT
-                attendance_logs.id,
-                attendance_logs.session_id,
-                attendance_logs.status,
-                attendance_logs.clock_in_at,
-                attendance_logs.clock_out_at
-            FROM attendance_logs
-            INNER JOIN qr_sessions
-                ON qr_sessions.id = attendance_logs.session_id
-            WHERE attendance_logs.user_id = ?
-            AND qr_sessions.date = CURDATE()
-            ORDER BY attendance_logs.id DESC
-            LIMIT 1
-        ");
-
-        $stmt->execute([$userId]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /**
      * Present employees
      */
     public function getPresentEmployees($sessionId)
@@ -186,4 +159,63 @@ class AttendanceLogModel
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getAllAttendanceRecords()
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                CONCAT(u.first_name, ' ', u.last_name) AS NAME,
+                u.department AS DEPARTMENT,
+                q.date AS DATE,
+                a.clock_in_at AS 'CHECK IN',
+                a.clock_out_at AS 'CHECK OUT',
+                TIMEDIFF(a.clock_out_at, a.clock_in_at) AS 'HOURS WORKED',
+                CASE
+                    WHEN a.clock_in_at IS NULL THEN 'NOT CLOCKED IN'
+                    WHEN TIME(a.clock_in_at) <= q.clock_in_deadline THEN 'ON TIME'
+                    WHEN TIME(a.clock_in_at) > q.clock_in_deadline THEN 'LATE'
+                END AS STATUS
+
+            FROM `railway`.`attendance_logs` a
+            JOIN `railway`.`users` u
+                ON a.user_id = u.id
+            JOIN `railway`.`qr_sessions` q 
+                ON a.session_id = q.id
+            ORDER BY q.date DESC;
+        ");
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getMyAttendanceRecords(int $userId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                CONCAT(u.first_name, ' ', u.last_name) AS NAME,
+                u.department AS DEPARTMENT,
+                q.date AS DATE,
+                a.clock_in_at AS 'CHECK IN',
+                a.clock_out_at AS 'CHECK OUT',
+                TIMEDIFF(a.clock_out_at, a.clock_in_at) AS 'HOURS WORKED',
+                CASE
+                    WHEN a.clock_in_at IS NULL THEN 'NOT CLOCKED IN'
+                    WHEN TIME(a.clock_in_at) <= q.clock_in_deadline THEN 'ON TIME'
+                    WHEN TIME(a.clock_in_at) > q.clock_in_deadline THEN 'LATE'
+                END AS STATUS
+
+            FROM `railway`.`attendance_logs` a
+            JOIN `railway`.`users` u
+                ON a.user_id = u.id
+            JOIN `railway`.`qr_sessions` q 
+                ON a.session_id = q.id
+            WHERE a.user_id = ?    
+            ORDER BY q.date DESC;
+        ");
+
+        $stmt->execute([$userId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
