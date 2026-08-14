@@ -118,13 +118,57 @@ class UserController
     }
 
     /**
-     * GET /api/users (admin only) – all users
+     * GET /api/users (admin only) – filtered, paginated list.
+     * Query params: search, department, position, role, page, limit, attendance=true
      */
     public function index(): void
     {
         $this->auth->requireAdmin();
-        $users = $this->userModel->getAllUsers();
-        jsonResponse(['success' => true, 'data' => $users]);
+
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $limit = max(1, min(100, (int)($_GET['limit'] ?? 20)));
+        $offset = ($page - 1) * $limit;
+
+        $filters = array_filter([
+            'search'     => $_GET['search'] ?? null,
+            'department' => $_GET['department'] ?? null,
+            'position'   => $_GET['position'] ?? null,
+            'role'       => $_GET['role'] ?? null,
+        ]);
+
+        $withAttendance = ($_GET['attendance'] ?? '') === 'true';
+
+        $users = $this->userModel->getUsers($filters, $withAttendance, $limit, $offset);
+        $total = $this->userModel->countUsers($filters);
+
+        jsonResponse([
+            'success' => true,
+            'data' => $users,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'departments' => $this->userModel->getDepartments(),
+                'positions' => $this->userModel->getPositions(),
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/users/{id} (admin only) – single user + their attendance summary.
+     */
+    public function show(int $id): void
+    {
+        $this->auth->requireAdmin();
+
+        $user = $this->userModel->getUserProfile($id);
+        if (!$user) {
+            jsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $attendance = $this->userModel->getUserAttendanceSummary($id);
+
+        jsonResponse(['success' => true, 'data' => ['user' => $user, 'attendance' => $attendance]]);
     }
 
     /**

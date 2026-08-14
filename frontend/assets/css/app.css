@@ -1,5 +1,14 @@
-<<<<<<< HEAD
+/* ==========================================================================
+   CheckMate — shared app stylesheet.
+   Two design languages live here on purpose: "classic" (.panel/.status-badge/
+   .filters/.toast-region etc.) is what admin-employees.js and admin-reports.js
+   render into; "cm-*" (.cm-card/.cm-btn/.cm-topbar etc.) is what qr-code.php
+   and the shared header/layout use. Variables are aliased so both work from
+   one file — don't delete either half without checking who still uses it.
+   ========================================================================== */
+
 :root {
+    /* classic tokens */
     --bg: #f7faff;
     --panel: #ffffff;
     --line: #dbe5f1;
@@ -9,6 +18,16 @@
     --teal-dark: #0d766b;
     --soft-input: #f8fbff;
     --shadow: 0 18px 30px rgba(12, 32, 64, 0.08);
+
+    /* cm-* tokens (aliased to the classic ones above so values stay in sync) */
+    --blue: #4A6CF7;
+    --blue-light: #EEF1FF;
+    --green: #16A34A;
+    --green-light: #ECFDF5;
+    --red: #EF4444;
+    --red-light: #FEF2F2;
+    --border: var(--line);
+    --ink: var(--text);
 }
 
 * {
@@ -44,335 +63,37 @@ textarea {
     display: none !important;
 }
 
+/* ── Dark mode (toggled by header.php's toggleDarkMode(), persisted per-browser) ── */
+body.dark-mode {
+    --bg: #0b1220;
+    --panel: #131c2e;
+    --line: #253044;
+    --text: #e7edf7;
+    --muted: #93a3bd;
+    --soft-input: #101827;
+}
+body.dark-mode .cm-card,
+body.dark-mode .cm-topbar,
+body.dark-mode .cm-iconbtn,
+body.dark-mode .panel {
+    background: var(--panel);
+    border-color: var(--line);
+    color: var(--text);
+}
+body.dark-mode .sidebar {
+    background: #10182a;
+}
+
+/* ==========================================================================
+   Classic system: app-shell layout, panels, tables, filters, status badges.
+   Used by admin/employees.php, admin/reports.php, admin/leave-requests.php,
+   staff/leave.php, attendance-history.php.
+   ========================================================================== */
+
 .app-shell {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
     min-height: 100vh;
-}
-
-.sidebar {
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding: 26px 18px 24px;
-    background: #ffffff;
-    border-right: 1px solid var(--line);
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 10px;
-}
-
-.brand-mark {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    background: linear-gradient(145deg, #039b82, #0b7b72);
-    box-shadow: 0 12px 22px rgba(4, 126, 114, 0.2);
-    position: relative;
-}
-
-.brand-mark::before,
-.brand-mark::after {
-    content: "";
-    position: absolute;
-    inset: 14px;
-    border: 2px solid #ffffff;
-    border-left-color: transparent;
-    border-right-color: transparent;
-    border-radius: 4px;
-}
-
-.brand-mark::after {
-    inset: 18px 12px;
-    border-top-color: transparent;
-    border-bottom-color: transparent;
-}
-
-.brand strong {
-    display: block;
-    color: #061735;
-    font-size: 24px;
-    line-height: 1;
-}
-
-.brand small {
-    display: block;
-    margin-top: 5px;
-    color: var(--muted);
-    font-size: 12px;
-    letter-spacing: 1.8px;
-}
-
-.workspace-label {
-    margin: 38px 16px 18px;
-    color: #526888;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 1.4px;
-}
-
-.sidebar-nav {
-    display: grid;
-    gap: 10px;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-height: 51px;
-    padding: 0 16px;
-    border-radius: 11px;
-    color: #5b6f8e;
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.nav-item.active {
-    background: var(--teal);
-    color: #ffffff;
-    font-weight: 800;
-    box-shadow: 0 14px 24px rgba(19, 133, 120, 0.24);
-}
-
-.nav-icon {
-    width: 20px;
-    height: 20px;
-    border: 2px solid currentColor;
-    border-radius: 5px;
-    opacity: 0.9;
-}
-
-.icon-clock,
-.icon-history,
-.icon-settings,
-.icon-alert {
-    border-radius: 50%;
-}
-
-.icon-calendar {
-    border-radius: 4px;
-    position: relative;
-}
-
-.icon-calendar::before {
-    content: "";
-    position: absolute;
-    left: 3px;
-    right: 3px;
-    top: 5px;
-    border-top: 2px solid currentColor;
-}
-
-.icon-users,
-.icon-chart,
-.icon-qr {
-    border-style: dashed;
-}
-
-.role-pill {
-    margin-top: auto;
-    width: fit-content;
-    min-height: 31px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 14px;
-    border-radius: 999px;
-    background: #c9fbef;
-    color: #0a7168;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    border-top: 1px solid var(--line);
-}
-
-.spark {
-    font-weight: 900;
-}
-
-.main-shell {
-    min-width: 0;
-}
-
-.topbar {
-    height: 88px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 0 34px;
-    background: #ffffff;
-    border-bottom: 1px solid var(--line);
-}
-
-.search-box {
-    width: min(400px, 45vw);
-    height: 50px;
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    padding: 0 18px;
-    background: var(--soft-input);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-}
-
-.search-box span {
-    width: 14px;
-    height: 14px;
-    border: 2px solid #657897;
-    border-radius: 50%;
-    position: relative;
-}
-
-.search-box span::after {
-    content: "";
-    position: absolute;
-    width: 7px;
-    height: 2px;
-    right: -6px;
-    bottom: -4px;
-    background: #657897;
-    transform: rotate(45deg);
-}
-
-.search-box input {
-    width: 100%;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--text);
-    font-size: 18px;
-}
-
-.search-box input::placeholder {
-    color: #8c9aaf;
-}
-
-.topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.clock-block {
-    min-width: 112px;
-    text-align: right;
-}
-
-.clock-block strong {
-    display: block;
-    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-    font-size: 20px;
-    letter-spacing: 1px;
-}
-
-.clock-block small {
-    color: #506989;
-}
-
-.icon-button {
-    width: 48px;
-    height: 48px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: #ffffff;
-    color: #4d6281;
-    display: grid;
-    place-items: center;
-    position: relative;
-}
-
-.moon-icon,
-.bell-icon {
-    width: 18px;
-    height: 18px;
-    border: 2px solid currentColor;
-    border-radius: 50%;
-}
-
-.bell-icon {
-    border-radius: 9px 9px 6px 6px;
-    border-top-width: 2px;
-}
-
-.has-badge > span:last-child {
-    position: absolute;
-    top: -7px;
-    right: -5px;
-    width: 17px;
-    height: 17px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #f24a58;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 900;
-}
-
-.profile-menu {
-    min-width: 200px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 12px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: #ffffff;
-}
-
-.avatar {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #0f8177;
-    color: #ffffff;
-    font-weight: 900;
-}
-
-body[data-role="admin"] .avatar {
-    background: #7437e8;
-}
-
-.profile-copy {
-    min-width: 0;
-    flex: 1;
-}
-
-.profile-copy strong,
-.profile-copy small {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.profile-copy strong {
-    font-size: 16px;
-}
-
-.profile-copy small {
-    color: #5c708d;
-    font-size: 14px;
-}
-
-.chevron {
-    width: 9px;
-    height: 9px;
-    border-right: 2px solid #071834;
-    border-bottom: 2px solid #071834;
-    transform: rotate(45deg) translateY(-2px);
 }
 
 .page-content {
@@ -390,19 +111,15 @@ body[data-role="admin"] .avatar {
 .page-heading > div {
     min-width: 0;
 }
-.page-heading p {
-    max-width: 860px;
-}
-
 .page-heading h1 {
     margin: 0 0 8px;
     font-size: 33px;
     line-height: 1.1;
     letter-spacing: 0;
 }
-
 .page-heading p {
     margin: 0;
+    max-width: 860px;
     color: #526a89;
     font-size: 19px;
 }
@@ -426,8 +143,11 @@ body[data-role="admin"] .avatar {
     min-height: 74px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     padding: 0 24px;
     border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
 }
 
 .panel-header h2 {
@@ -482,6 +202,7 @@ body[data-role="admin"] .avatar {
     color: #ffffff;
     font-weight: 900;
     box-shadow: 0 14px 24px rgba(19, 133, 120, 0.2);
+    cursor: pointer;
 }
 
 .primary-button:disabled,
@@ -520,7 +241,7 @@ th {
 }
 
 td {
-    color: #001433;
+    color: var(--text);
     font-size: 17px;
 }
 
@@ -559,7 +280,6 @@ tbody tr:last-child td {
     background: #fff0c3;
     color: #f09605;
 }
-
 .status-pending span {
     background: #ff9f11;
 }
@@ -568,7 +288,6 @@ tbody tr:last-child td {
     background: #d7fbe6;
     color: #18c85b;
 }
-
 .status-approved span {
     background: #28ca61;
 }
@@ -577,7 +296,6 @@ tbody tr:last-child td {
     background: #ffe0e4;
     color: #fb3847;
 }
-
 .status-rejected span {
     background: #f24b57;
 }
@@ -586,6 +304,7 @@ tbody tr:last-child td {
     display: flex;
     gap: 20px;
     margin: 8px 0 22px;
+    flex-wrap: wrap;
 }
 
 .filter-button {
@@ -597,6 +316,7 @@ tbody tr:last-child td {
     background: transparent;
     color: #586b89;
     font-weight: 900;
+    cursor: pointer;
 }
 
 .filter-button.active {
@@ -623,6 +343,7 @@ tbody tr:last-child td {
     color: #ffffff;
     font-size: 21px;
     font-weight: 800;
+    cursor: pointer;
 }
 
 .approve-button {
@@ -645,7 +366,7 @@ tbody tr:last-child td {
     bottom: 24px;
     display: grid;
     gap: 10px;
-    z-index: 20;
+    z-index: 999;
 }
 
 .toast {
@@ -665,51 +386,113 @@ tbody tr:last-child td {
     background: #dd3947;
 }
 
+/* ── Stat cards (summary tiles used on Reports/Employees) ─────────── */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+}
+.stat-card .stat-label {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+.stat-card .stat-value {
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--text);
+}
+
+/* ── 3D bar chart (CSS-only isometric bars, no external chart lib) ── */
+.chart3d-wrap {
+    perspective: 900px;
+    padding: 30px 20px 10px;
+    overflow-x: auto;
+}
+.chart3d-scene {
+    display: flex;
+    align-items: flex-end;
+    gap: 26px;
+    min-height: 230px;
+    transform-style: preserve-3d;
+    transform: rotateX(48deg) rotateZ(-32deg);
+    transform-origin: bottom left;
+    padding: 0 10px;
+}
+.chart3d-bar {
+    position: relative;
+    width: 42px;
+    transform-style: preserve-3d;
+    transition: height .4s ease;
+}
+.chart3d-bar .face {
+    position: absolute;
+    left: 0;
+    width: 42px;
+}
+.chart3d-bar .front {
+    height: 100%;
+    background: linear-gradient(180deg, var(--teal), var(--teal-dark));
+    transform: translateZ(21px);
+    border-radius: 4px 4px 0 0;
+}
+.chart3d-bar .side {
+    height: 100%;
+    width: 21px;
+    background: #0a5a51;
+    left: 42px;
+    transform: rotateY(90deg) translateZ(21px);
+    transform-origin: left;
+}
+.chart3d-bar .top {
+    height: 21px;
+    background: #1fb0a0;
+    top: 0;
+    transform: rotateX(90deg) translateZ(0px);
+    transform-origin: top;
+}
+.chart3d-labels {
+    display: flex;
+    gap: 26px;
+    padding: 0 10px;
+    margin-top: 14px;
+}
+.chart3d-labels span {
+    width: 42px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 @media (max-width: 1100px) {
     .app-shell {
         grid-template-columns: 260px minmax(0, 1fr);
     }
-
     .leave-grid {
         grid-template-columns: 1fr;
     }
-
 }
 
 @media (max-width: 760px) {
     .app-shell {
         display: block;
     }
-
-    .sidebar {
-        position: static;
-        height: auto;
-    }
-
-    .topbar {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 16px;
-    }
-
-    .search-box {
-        width: 100%;
-    }
-
     .page-content {
         padding: 28px 16px;
     }
-
-    .topbar-actions {
-        width: 100%;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-    }
-
-    .profile-menu {
-        min-width: 180px;
-    }
-
     th,
     td,
     .requests-panel th,
@@ -718,37 +501,13 @@ tbody tr:last-child td {
         padding-right: 16px;
     }
 }
-=======
+
 /* ==========================================================================
-   CheckMate — shared app stylesheet (dashboard/admin/staff pages)
+   cm-* system: hero headers, cards, buttons, topbar, scan box, activity feed.
+   Used by dashboard.php, admin/qr-code.php, admin/emergency.php, and the
+   shared header.php/layouts/app.php chrome.
    ========================================================================== */
 
-:root {
-    --blue: #4A6CF7;
-    --blue-light: #EEF1FF;
-    --green: #16A34A;
-    --green-light: #ECFDF5;
-    --red: #EF4444;
-    --red-light: #FEF2F2;
-    --teal: #0D9488;
-    --muted: #64748B;
-    --border: #E2E8F0;
-    --bg: #F4F6FB;
-    --ink: #0F172A;
-}
-
-* { box-sizing: border-box; }
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    margin: 0;
-}
-
-a { color: inherit; }
-
-/* ── Page hero header ───────────────────────────────────────────── */
 .cm-hero {
     display: flex;
     align-items: flex-start;
@@ -781,7 +540,6 @@ a { color: inherit; }
     text-align: right;
 }
 
-/* ── Cards ──────────────────────────────────────────────────────── */
 .cm-card {
     background: #fff;
     border: 1px solid var(--border);
@@ -801,7 +559,6 @@ a { color: inherit; }
     padding: 0 20px 20px;
 }
 
-/* ── Buttons ────────────────────────────────────────────────────── */
 .cm-btn {
     display: inline-flex;
     align-items: center;
@@ -820,7 +577,7 @@ a { color: inherit; }
 .cm-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
 .cm-btn.primary { background: var(--teal); color: #fff; }
-.cm-btn.primary:hover:not(:disabled) { background: #0F766E; }
+.cm-btn.primary:hover:not(:disabled) { background: var(--teal-dark); }
 
 .cm-btn.success { background: var(--green); color: #fff; }
 .cm-btn.success:hover:not(:disabled) { background: #15803D; }
@@ -833,7 +590,6 @@ a { color: inherit; }
     color: var(--ink);
 }
 
-/* ── QR / camera scan box ──────────────────────────────────────── */
 .cm-scan-box {
     position: relative;
     background: #0F172A;
@@ -862,7 +618,6 @@ a { color: inherit; }
     100% { top: 16px; }
 }
 
-/* ── Activity / timeline items ─────────────────────────────────── */
 .cm-activity {
     display: flex;
     align-items: center;
@@ -884,14 +639,12 @@ a { color: inherit; }
 .cm-activity-text { font-size: 13.5px; font-weight: 600; }
 .cm-activity-time { font-size: 12px; color: var(--muted); }
 
-/* ── Empty states ───────────────────────────────────────────────── */
 .cm-empstate {
     text-align: center;
     color: var(--muted);
 }
 .cm-empstate p { margin: 0; line-height: 1.6; }
 
-/* ── Top bar (search / clock / notifications / profile) ──────────── */
 .cm-topbar {
     display: flex;
     align-items: center;
@@ -1000,4 +753,3 @@ a { color: inherit; }
     border-radius: 8px;
 }
 .cm-navitem:hover { background: var(--bg); }
->>>>>>> origin/PortReferencingUpdate

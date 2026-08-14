@@ -1,26 +1,5 @@
-<<<<<<< HEAD
-<header class="topbar">
-    <label class="search-box">
-        <span aria-hidden="true"></span>
-        <input type="search" placeholder="Search employees, records...">
-    </label>
-    <div class="topbar-actions">
-        <div class="clock-block">
-            <strong id="currentTime">--:--:--</strong>
-            <small id="currentDate">-- --- ----</small>
-        </div>
-        <button class="icon-button" type="button" aria-label="Toggle dark mode">
-            <span class="moon-icon" aria-hidden="true"></span>
-        </button>
-        <button class="icon-button has-badge" type="button" aria-label="Notifications">
-            <span class="bell-icon" aria-hidden="true"></span>
-            <span>4</span>
-        </button>
-
-    </div>
-</header>
-=======
 <?php
+// Shared topbar: search box, live clock, notifications, profile menu. Included by layouts/app.php on every page.
 $user = $_SESSION;
 $notifications = [
     ['icon' => '✅', 'color' => '#22C55E', 'text' => 'Thabo Nkosi checked in', 'time' => '2 min ago'],
@@ -34,8 +13,8 @@ $notifications = [
     </div>
     <div class="cm-topbar-right">
         <div class="cm-clockchip">
-            <span class="t" id="liveTime">12:27:08</span>
-            <span class="d" id="liveDate">Thursday, 30 July 2026</span>
+            <span class="t" id="liveTime">--:--:--</span>
+            <span class="d" id="liveDate">-- --- ----</span>
         </div>
         <button class="cm-iconbtn" onclick="toggleDarkMode()" title="Toggle dark mode">
             <span id="darkModeIcon">🌙</span>
@@ -75,20 +54,76 @@ $notifications = [
                     <?= strtoupper(substr($user['user_name'] ?? 'U', 0, 2)) ?>
                 </div>
                 <div style="line-height:1.1;">
-                    <div style="font-size:13px; font-weight:600;"><?= $user['user_name'] ?? 'User' ?></div>
+                    <div style="font-size:13px; font-weight:600;"><?= htmlspecialchars($user['user_name'] ?? 'User') ?></div>
                     <div style="font-size:11px; color:var(--muted);">
-                        <?= ($user['user_role'] ?? 'staff') === 'admin' ? 'Administrator' : ($user['department'] ?? 'Staff') ?>
+                        <?= ($user['user_role'] ?? 'staff') === 'admin' ? 'Administrator' : htmlspecialchars($user['department'] ?? 'Staff') ?>
                     </div>
                 </div>
                 <span>▼</span>
             </div>
             <div id="profileDropdown" style="display:none; position:absolute; right:0; top:50px; width:190px; z-index:50;" class="cm-card">
                 <div style="padding:6px;">
-                    <a href="/?page=settings" class="cm-navitem">⚙️ Settings</a>
-                    <a href="/api/logout.php" class="cm-navitem" style="color:var(--red);">🚪 Log out</a>
+                    <a href="/public/index.php?page=settings" class="cm-navitem">⚙️ Settings</a>
+                    <a href="javascript:void(0)" class="cm-navitem" style="color:var(--red);" onclick="logoutUser(); return false;">🚪 Log out</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
->>>>>>> origin/PortReferencingUpdate
+
+<script>
+// Live clock
+(function () {
+    const timeEl = document.getElementById('liveTime');
+    const dateEl = document.getElementById('liveDate');
+    if (!timeEl || !dateEl) return;
+    function tick() {
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString('en-GB');
+        dateEl.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
+
+// Dark mode toggle (persists per-browser via localStorage)
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('checkmate_dark_mode', isDark ? '1' : '0');
+    const icon = document.getElementById('darkModeIcon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+(function () {
+    if (localStorage.getItem('checkmate_dark_mode') === '1') {
+        document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('dark-mode');
+            const icon = document.getElementById('darkModeIcon');
+            if (icon) icon.textContent = '☀️';
+        });
+    }
+})();
+
+// Notification / profile dropdowns (mutually exclusive, close on outside click)
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    const profile = document.getElementById('profileDropdown');
+    if (profile) profile.style.display = 'none';
+    if (dropdown) dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+function toggleProfile() {
+    const dropdown = document.getElementById('profileDropdown');
+    const notif = document.getElementById('notificationDropdown');
+    if (notif) notif.style.display = 'none';
+    if (dropdown) dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function (event) {
+    const notif = document.getElementById('notificationDropdown');
+    const profile = document.getElementById('profileDropdown');
+    if (notif && !event.target.closest('.cm-iconbtn') && !event.target.closest('#notificationDropdown')) {
+        notif.style.display = 'none';
+    }
+    if (profile && !event.target.closest('.cm-profile') && !event.target.closest('#profileDropdown')) {
+        profile.style.display = 'none';
+    }
+});
+</script>

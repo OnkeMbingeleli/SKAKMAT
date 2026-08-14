@@ -1,13 +1,5 @@
-/**
- * API Helper Functions
- * Centralized API calls for the CheckMate frontend
- */
-
-<<<<<<< HEAD
+// Centralized API helper (token storage, login/logout, generic apiCall) for the frontend.
 const API_URL = 'http://localhost:8080';
-=======
-const API_URL = 'http://127.0.0.1:8000';
->>>>>>> origin/PortReferencingUpdate
 
 /**
  * Get the stored JWT token from localStorage

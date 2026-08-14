@@ -72,11 +72,7 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
     </nav>
 
     <div class="sidebar-footer">
-<<<<<<< HEAD
         <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong> (<?= htmlspecialchars(ucfirst($role)) ?>)</p>
-=======
-        <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong></p>
->>>>>>> origin/PortReferencingUpdate
         <a href="javascript:void(0)" class="logout-btn" onclick="logoutUser(); return false;">Logout</a>
     </div>
 </aside>
@@ -86,7 +82,6 @@ $menu = ($role === 'admin') ? $adminMenu : $staffMenu;
 
 <!-- Load external sidebar JS -->
 <script src="/assets/js/utils/sidebar.js"></script>
-<<<<<<< HEAD
 <script>
 window.logoutUser = function logoutUser() {
     localStorage.removeItem('token');
@@ -96,8 +91,6 @@ window.logoutUser = function logoutUser() {
     window.location.replace('/public/index.php?page=login');
 };
 </script>
-=======
->>>>>>> origin/PortReferencingUpdate
 
 <style>
 /* ── same styles as before ── */
@@ -237,8 +230,4 @@ window.logoutUser = function logoutUser() {
         display: block;
     }
 }
-<<<<<<< HEAD
 </style>
-=======
-</style>
->>>>>>> origin/PortReferencingUpdate

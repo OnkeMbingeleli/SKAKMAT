@@ -36,6 +36,10 @@ if ($method === 'GET' && $path === '/users') {
     $controller->index();
 }
 
+if ($method === 'GET' && preg_match('#^/users/(\d+)$#', $path, $matches)) {
+    $controller->show((int)$matches[1]);
+}
+
 if ($method === 'GET' && $path === '/users/staff') {
     $controller->staff();
 }

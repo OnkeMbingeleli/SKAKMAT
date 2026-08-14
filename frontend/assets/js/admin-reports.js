@@ -35,6 +35,42 @@ function formatNumber(value) {
     return value === null || value === undefined ? '0' : String(value);
 }
 
+// Renders a CSS-only isometric 3D bar chart of present_count per period.
+// No external chart library — bars are real elements with front/side/top
+// faces positioned in 3D space via transform: translateZ/rotateY.
+function renderChart3D(rows) {
+    const scene = document.getElementById('reportsChartScene');
+    const labels = document.getElementById('reportsChartLabels');
+    const empty = document.getElementById('reportsChartEmpty');
+    if (!scene || !labels) return;
+
+    if (!rows.length) {
+        scene.innerHTML = '';
+        labels.innerHTML = '';
+        empty?.classList.remove('hidden');
+        return;
+    }
+    empty?.classList.add('hidden');
+
+    const points = rows.slice(-12); // keep the chart readable
+    const max = Math.max(1, ...points.map(r => Number(r.present_count) || 0));
+    const maxBarHeight = 170;
+
+    scene.innerHTML = points.map(row => {
+        const value = Number(row.present_count) || 0;
+        const height = Math.max(6, Math.round((value / max) * maxBarHeight));
+        return `
+            <div class="chart3d-bar" style="height:${height}px;" title="${row.period}: ${value} present">
+                <div class="face top"></div>
+                <div class="face side"></div>
+                <div class="face front"></div>
+            </div>
+        `;
+    }).join('');
+
+    labels.innerHTML = points.map(row => `<span>${(row.period || '').toString().slice(0, 10)}</span>`).join('');
+}
+
 function renderReportRow(row) {
     return `
         <tr>
@@ -89,6 +125,7 @@ async function loadReports() {
     body.innerHTML = rows.map(renderReportRow).join('');
     empty.classList.toggle('hidden', rows.length > 0);
 
+    renderChart3D(rows);
     populateFilterData(meta);
     updateTypeButtons();
 }

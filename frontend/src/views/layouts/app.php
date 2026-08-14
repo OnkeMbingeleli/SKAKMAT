@@ -1,24 +1,5 @@
-<<<<<<< HEAD
-<?php include __DIR__ . '/../partials/sidebar.php'; ?>
-
 <?php
-session_start();
-
-// Allow switching via URL: ?role=admin or ?role=staff
-if (isset($_GET['role'])) {
-    $_SESSION['user_role'] = $_GET['role'];
-}
-
-// Default to staff if not set
-if (!isset($_SESSION['user_role'])) {
-    $_SESSION['user_role'] = 'staff';
-}
-
-// Set a default name
-$_SESSION['user_name'] = $_SESSION['user_role'] === 'admin' ? 'Karabo' : 'Thabo';
-?>
-=======
-<?php
+// Shared page shell: sidebar + topbar + content wrapper. Views set $title/$content then include this.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -75,12 +56,16 @@ if (!isset($_SESSION['user_name'])) {
     </div>
 </div>
 
+<div class="toast-region"></div>
+
 <style>
 /* Basic main content spacing to sit next to sidebar */
 .cm-main { margin-left: 280px; padding: 28px; }
 .cm-container { max-width: 1100px; margin: 0 auto; }
+@media (max-width: 768px) {
+    .cm-main { margin-left: 0; padding: 20px 16px; }
+}
 </style>
 
 </body>
 </html>
->>>>>>> origin/PortReferencingUpdate

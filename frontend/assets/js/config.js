@@ -1,17 +1,13 @@
-/**
- * Frontend Configuration
- */
+// Frontend config: API base URL + localStorage key prefix.
 
-// Change this based on environment (development vs production)
+// process.env doesn't exist in a plain browser script — detect prod by hostname instead.
+const IS_PRODUCTION = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+
 const CONFIG = {
-    API_URL: process.env.NODE_ENV === 'production' 
+    API_URL: IS_PRODUCTION
         ? 'https://api.checkmate.app'  // Update with your production URL
-<<<<<<< HEAD
         : 'http://localhost:8080',
-=======
-        : 'http://127.0.0.1:8000',
->>>>>>> origin/PortReferencingUpdate
-    
+
     STORAGE_PREFIX: 'checkmate_',
     TOKEN_KEY: 'token',
     USER_KEY: 'user'
