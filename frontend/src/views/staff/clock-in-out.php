@@ -19,7 +19,7 @@ ob_start();
 <div style="display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px;">
     <div class="cm-card" style="padding: 28px;">
         <div class="cm-scan-box" id="qrScanner">
-            <div id="qrReader" style="width:100%; display:none; border-radius:12px; overflow:hidden;"></div>
+            <div id="qrReader" style="position:absolute; inset:0; width:100%; height:100%; display:none; border-radius:20px; overflow:hidden;"></div>
             <div class="cm-scan-line" id="scanLine" style="display: none;"></div>
             <div class="cm-scan-corner" style="top:14px; left:14px; border-top:3px solid var(--blue); border-left:3px solid var(--blue); border-radius:6px 0 0 0;"></div>
             <div class="cm-scan-corner" style="top:14px; right:14px; border-top:3px solid var(--blue); border-right:3px solid var(--blue); border-radius:0 6px 0 0;"></div>
@@ -54,6 +54,20 @@ ob_start();
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+#qrReader video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+#qrReader__scan_region {
+    width: 100% !important;
+    height: 100% !important;
+}
+#qrReader__dashboard {
+    display: none !important;
+}
+</style>
 <script>
 const API_BASE = 'http://localhost:8080';
 const TOKEN_KEY = 'token';
@@ -222,6 +236,11 @@ function showResult(message, isSuccess, userName, time) {
 }
 
 function startCameraScan() {
+    if (typeof Html5Qrcode === 'undefined') {
+        showResult('QR scanner library failed to load. Check your internet connection and refresh the page.', false);
+        return;
+    }
+
     const reader = document.getElementById('qrReader');
     const placeholder = document.getElementById('scanPlaceholder');
     const scanLine = document.getElementById('scanLine');
@@ -230,7 +249,17 @@ function startCameraScan() {
     placeholder.style.display = 'none';
     scanLine.style.display = 'block';
 
-    html5QrCode = new Html5Qrcode('qrReader');
+    try {
+        html5QrCode = new Html5Qrcode('qrReader');
+    } catch (err) {
+        console.error('Html5Qrcode init error:', err);
+        showResult('Could not start the QR scanner: ' + err.message, false);
+        reader.style.display = 'none';
+        placeholder.style.display = 'flex';
+        scanLine.style.display = 'none';
+        return;
+    }
+
     html5QrCode.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: 220 },
@@ -239,7 +268,7 @@ function startCameraScan() {
     ).catch((err) => {
         console.error('Camera start error:', err);
         stopCameraScan();
-        showResult('Could not access camera. Check permissions and try again.', false);
+        showResult('Could not access camera: ' + (err.message || err) + '. Check browser permissions and try again.', false);
         const button = document.getElementById('clockButton');
         button.disabled = false;
         setButtonState(nextAction);
