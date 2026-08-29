@@ -67,3 +67,9 @@ if (
     $controller->getMyAttendanceRecords();
 
 }
+
+if ($method === 'GET' && $path === '/attendance/mine') {
+
+    $controller->getMine();
+
+}

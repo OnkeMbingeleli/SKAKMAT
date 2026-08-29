@@ -17,6 +17,11 @@ class QRCodeModel
     {
         $token = bin2hex(random_bytes(32));
 
+        // A session has exactly one scannable code. This also invalidates an
+        // earlier code when an admin re-enables the same daily session.
+        $expire = $this->db->prepare("\n            UPDATE qr_codes\n            SET status = 'used', used_at = NOW()\n            WHERE session_id = ? AND status = 'active'\n        ");
+        $expire->execute([$sessionId]);
+
         $sql = "INSERT INTO qr_codes
                 (
                     session_id,
@@ -48,10 +53,14 @@ class QRCodeModel
     public function active()
     {
         $sql = "
-            SELECT *
+            SELECT qr_codes.*
             FROM qr_codes
-            WHERE status='active'
-            ORDER BY id DESC
+            INNER JOIN qr_sessions
+                ON qr_sessions.id = qr_codes.session_id
+            WHERE qr_codes.status = 'active'
+              AND qr_sessions.status = 'active'
+              AND qr_sessions.date = CURDATE()
+            ORDER BY qr_codes.id DESC
             LIMIT 1
         ";
 
@@ -62,10 +71,14 @@ class QRCodeModel
     public function findByToken($token)
     {
         $sql = "
-            SELECT *
+            SELECT qr_codes.*
             FROM qr_codes
-            WHERE token = ?
-            AND status = 'active'
+            INNER JOIN qr_sessions
+                ON qr_sessions.id = qr_codes.session_id
+            WHERE qr_codes.token = ?
+              AND qr_codes.status = 'active'
+              AND qr_sessions.status = 'active'
+              AND qr_sessions.date = CURDATE()
             LIMIT 1
         ";
 
@@ -84,14 +97,16 @@ class QRCodeModel
                 status='used',
                 used_by=?,
                 used_at=NOW()
-            WHERE id=?
+            WHERE id=? AND status='active'
         ";
 
         $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([
+        $stmt->execute([
             $userId,
             $id
         ]);
+
+        return $stmt->rowCount() === 1;
     }
 }

@@ -1,226 +1,242 @@
-function createToast(message, type = 'success') {
-    const container = document.querySelector('.toast-region');
-    if (!container) return;
+/**
+ * Reports page (admin-reports.php): 4 Chart.js canvases + a "today at a
+ * glance" metric grid, driven by GET /api/reports?type=dashboard.
+ * Relies on api.js for apiCall()/getToken()/API_URL, and Chart.js (CDN).
+ */
+(function () {
+    'use strict';
 
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    container.appendChild(toast);
+    const el = (id) => document.getElementById(id);
+    let charts = {};
+    let filtersPopulated = false;
 
-    setTimeout(() => toast.remove(), 3800);
-}
+    let state = {
+        startDate: '',
+        endDate: '',
+        department: '',
+        employeeId: '',
+    };
 
-async function handleAuthError(response) {
-    if (response && response.error && /auth|token/i.test(response.error)) {
-        createToast('Session expired. Redirecting to login...', 'error');
-        setTimeout(() => {
-            window.location.href = '/index.php?page=login';
-        }, 1200);
-        return true;
-    }
-    return false;
-}
-
-function buildQuery(params) {
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            searchParams.set(key, value);
-        }
-    });
-    return searchParams.toString();
-}
-
-function formatNumber(value) {
-    return value === null || value === undefined ? '0' : String(value);
-}
-
-// Renders a CSS-only isometric 3D bar chart of present_count per period.
-// No external chart library — bars are real elements with front/side/top
-// faces positioned in 3D space via transform: translateZ/rotateY.
-function renderChart3D(rows) {
-    const scene = document.getElementById('reportsChartScene');
-    const labels = document.getElementById('reportsChartLabels');
-    const empty = document.getElementById('reportsChartEmpty');
-    if (!scene || !labels) return;
-
-    if (!rows.length) {
-        scene.innerHTML = '';
-        labels.innerHTML = '';
-        empty?.classList.remove('hidden');
-        return;
-    }
-    empty?.classList.add('hidden');
-
-    const points = rows.slice(-12); // keep the chart readable
-    const max = Math.max(1, ...points.map(r => Number(r.present_count) || 0));
-    const maxBarHeight = 170;
-
-    scene.innerHTML = points.map(row => {
-        const value = Number(row.present_count) || 0;
-        const height = Math.max(6, Math.round((value / max) * maxBarHeight));
-        return `
-            <div class="chart3d-bar" style="height:${height}px;" title="${row.period}: ${value} present">
-                <div class="face top"></div>
-                <div class="face side"></div>
-                <div class="face front"></div>
-            </div>
-        `;
-    }).join('');
-
-    labels.innerHTML = points.map(row => `<span>${(row.period || '').toString().slice(0, 10)}</span>`).join('');
-}
-
-function renderReportRow(row) {
-    return `
-        <tr>
-            <td>${row.period || '-'}</td>
-            <td>${row.start_date || '-'}</td>
-            <td>${row.end_date || '-'}</td>
-            <td>${formatNumber(row.present_count)}</td>
-            <td>${formatNumber(row.total_checkins)}</td>
-            <td>${formatNumber(row.total_checkouts)}</td>
-            <td>${formatNumber(row.late_arrivals)}</td>
-        </tr>
-    `;
-}
-
-const reportState = {
-    type: 'daily',
-    start_date: '',
-    end_date: '',
-    department: '',
-    employee_id: '',
-};
-
-async function loadReports() {
-    const query = buildQuery({
-        type: reportState.type,
-        start_date: reportState.start_date,
-        end_date: reportState.end_date,
-        department: reportState.department,
-        employee_id: reportState.employee_id,
-    });
-
-    const response = await apiCall('/reports?' + query, { method: 'GET' });
-    if (!response.success) {
-        if (await handleAuthError(response)) return;
-        createToast(response.error || 'Unable to load reports', 'error');
-        return;
+    function toast(message, isError) {
+        const region = document.querySelector('.toast-region');
+        if (!region) { console.warn(message); return; }
+        const node = document.createElement('div');
+        node.className = 'toast ' + (isError ? 'error' : 'success');
+        node.textContent = message;
+        region.appendChild(node);
+        setTimeout(() => node.remove(), 3500);
     }
 
-    const data = response.data || {};
-    const summary = data.summary || {};
-    const rows = data.rows || [];
-    const meta = data.meta || {};
-
-    document.getElementById('reportAttendanceCount').textContent = formatNumber(summary.attendance_count);
-    document.getElementById('reportCheckins').textContent = formatNumber(summary.total_checkins);
-    document.getElementById('reportCheckouts').textContent = formatNumber(summary.total_checkouts);
-    document.getElementById('reportLateArrivals').textContent = formatNumber(summary.late_arrivals);
-    document.getElementById('reportAbsentees').textContent = formatNumber(summary.absentees);
-
-    const body = document.getElementById('reportsBody');
-    const empty = document.getElementById('reportsEmpty');
-    body.innerHTML = rows.map(renderReportRow).join('');
-    empty.classList.toggle('hidden', rows.length > 0);
-
-    renderChart3D(rows);
-    populateFilterData(meta);
-    updateTypeButtons();
-}
-
-function updateTypeButtons() {
-    document.querySelectorAll('.report-type-button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.type === reportState.type);
-    });
-}
-
-function populateFilterData(meta) {
-    const departmentSelect = document.getElementById('reportDepartment');
-    const employeeSelect = document.getElementById('reportEmployee');
-
-    if (departmentSelect && meta.departments) {
-        departmentSelect.innerHTML = '<option value="">All departments</option>' +
-            meta.departments.map(dep => `<option value="${dep}">${dep.charAt(0).toUpperCase() + dep.slice(1)}</option>`).join('');
-        departmentSelect.value = reportState.department;
+    function defaultDates() {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 27);
+        const fmt = (d) => d.toISOString().slice(0, 10);
+        return { start: fmt(start), end: fmt(end) };
     }
 
-    if (employeeSelect && meta.employees) {
-        employeeSelect.innerHTML = '<option value="">All employees</option>' +
-            meta.employees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('');
-        employeeSelect.value = reportState.employee_id;
+    function shortDate(period) {
+        const d = new Date(period);
+        if (isNaN(d)) return String(period).replace(/^\d{4}\s?W\s?/, 'W');
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     }
-}
 
-async function exportReport() {
-    const query = buildQuery({
-        type: reportState.type,
-        start_date: reportState.start_date,
-        end_date: reportState.end_date,
-        department: reportState.department,
-        employee_id: reportState.employee_id,
-        format: 'csv',
-    });
-    window.location.href = `/api/reports?${query}`;
-}
+    const palette = {
+        teal: '#6B7F32',
+        tealSoft: 'rgba(107, 127, 50, 0.18)',
+        accent: '#849B43',
+        amber: '#D97706',
+        red: '#EF4444',
+        blue: '#2563EB',
+        grid: 'rgba(100, 116, 139, 0.12)',
+    };
 
-function initializeFilters() {
-    const startDateInput = document.getElementById('reportStartDate');
-    const endDateInput = document.getElementById('reportEndDate');
-    const departmentSelect = document.getElementById('reportDepartment');
-    const employeeSelect = document.getElementById('reportEmployee');
-    const refreshButton = document.getElementById('refreshReports');
-    const exportButton = document.getElementById('exportReport');
+    function baseOptions(extra) {
+        return Object.assign({
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 11 } } },
+                y: { grid: { color: palette.grid }, ticks: { color: '#64748B', font: { size: 11 }, precision: 0 }, beginAtZero: true },
+            },
+        }, extra || {});
+    }
 
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    // ---------------------------------------------------------------
+    // Load
+    // ---------------------------------------------------------------
 
-    reportState.start_date = startDateInput.value || sevenDaysAgo.toISOString().slice(0, 10);
-    reportState.end_date = endDateInput.value || today.toISOString().slice(0, 10);
+    async function loadReports() {
+        [el('weeklyAttendanceChart'), el('monthlyAttendanceRateChart'), el('lateArrivalsChart'), el('presenceSplitChart')]
+            .forEach(c => c.closest('.chart-frame').classList.add('is-loading'));
 
-    startDateInput.value = reportState.start_date;
-    endDateInput.value = reportState.end_date;
-
-    startDateInput.addEventListener('change', event => {
-        reportState.start_date = event.target.value;
-        loadReports();
-    });
-
-    endDateInput.addEventListener('change', event => {
-        reportState.end_date = event.target.value;
-        loadReports();
-    });
-
-    departmentSelect.addEventListener('change', event => {
-        reportState.department = event.target.value;
-        loadReports();
-    });
-
-    employeeSelect.addEventListener('change', event => {
-        reportState.employee_id = event.target.value;
-        loadReports();
-    });
-
-    refreshButton.addEventListener('click', loadReports);
-    exportButton.addEventListener('click', exportReport);
-
-    document.querySelectorAll('.report-type-button').forEach(button => {
-        button.addEventListener('click', () => {
-            reportState.type = button.dataset.type;
-            loadReports();
+        const params = new URLSearchParams({
+            type: 'dashboard',
+            start_date: state.startDate,
+            end_date: state.endDate,
         });
-    });
-}
+        if (state.department) params.set('department', state.department);
+        if (state.employeeId) params.set('employee_id', state.employeeId);
 
-function initReportsPage() {
-    initializeFilters();
-    loadReports();
-}
+        const res = await apiCall(`/api/reports?${params.toString()}`);
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initReportsPage);
-} else {
-    initReportsPage();
-}
+        [el('weeklyAttendanceChart'), el('monthlyAttendanceRateChart'), el('lateArrivalsChart'), el('presenceSplitChart')]
+            .forEach(c => c.closest('.chart-frame').classList.remove('is-loading'));
+
+        if (!res || res.success === false) {
+            toast((res && res.error) || 'Could not load reports.', true);
+            return;
+        }
+
+        const data = res.data;
+        renderSummary(data.summary || {});
+        populateFilterOptions(data.meta || {});
+        renderCharts(data);
+    }
+
+    function renderSummary(summary) {
+        el('reportAttendanceCount').textContent = summary.attendance_count ?? 0;
+        el('reportCheckins').textContent = summary.total_checkins ?? 0;
+        el('reportCheckouts').textContent = summary.total_checkouts ?? 0;
+        el('reportLateArrivals').textContent = summary.late_arrivals ?? 0;
+        el('reportAbsentees').textContent = summary.absentees ?? 0;
+    }
+
+    function populateFilterOptions(meta) {
+        if (filtersPopulated) return;
+        filtersPopulated = true;
+
+        const deptSelect = el('reportDepartment');
+        (meta.departments || []).forEach(dep => {
+            const opt = document.createElement('option');
+            opt.value = dep; opt.textContent = dep;
+            deptSelect.appendChild(opt);
+        });
+
+        const empSelect = el('reportEmployee');
+        (meta.employees || []).forEach(emp => {
+            const opt = document.createElement('option');
+            opt.value = emp.id; opt.textContent = emp.name;
+            empSelect.appendChild(opt);
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // Charts
+    // ---------------------------------------------------------------
+
+    function destroyChart(key) {
+        if (charts[key]) { charts[key].destroy(); charts[key] = null; }
+    }
+
+    function renderCharts(data) {
+        const dailyRows = data.weekly_rows || [];
+        const weeklyRows = data.monthly_rows || [];
+        const staffCount = Math.max(1, (data.meta && data.meta.staff_count) || 1);
+        const summary = data.summary || {};
+
+        // 1. Weekly (daily) attendance — bar
+        destroyChart('weekly');
+        charts.weekly = new Chart(el('weeklyAttendanceChart'), {
+            type: 'bar',
+            data: {
+                labels: dailyRows.map(r => shortDate(r.start_date || r.period)),
+                datasets: [{
+                    label: 'Onsite',
+                    data: dailyRows.map(r => Number(r.present_count) || 0),
+                    backgroundColor: palette.teal,
+                    borderRadius: 6,
+                    maxBarThickness: 26,
+                }],
+            },
+            options: baseOptions(),
+        });
+
+        // 2. Monthly attendance rate — line
+        destroyChart('monthly');
+        charts.monthly = new Chart(el('monthlyAttendanceRateChart'), {
+            type: 'line',
+            data: {
+                labels: weeklyRows.map(r => shortDate(r.start_date || r.period)),
+                datasets: [{
+                    label: 'Attendance rate %',
+                    data: weeklyRows.map(r => Math.min(100, Math.round(((Number(r.present_count) || 0) / staffCount) * 100))),
+                    borderColor: palette.accent,
+                    backgroundColor: palette.tealSoft,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointBackgroundColor: palette.accent,
+                }],
+            },
+            options: baseOptions({ scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } } }),
+        });
+
+        // 3. Late arrivals — bar
+        destroyChart('late');
+        charts.late = new Chart(el('lateArrivalsChart'), {
+            type: 'bar',
+            data: {
+                labels: dailyRows.map(r => shortDate(r.start_date || r.period)),
+                datasets: [{
+                    label: 'Late arrivals',
+                    data: dailyRows.map(r => Number(r.late_arrivals) || 0),
+                    backgroundColor: palette.amber,
+                    borderRadius: 6,
+                    maxBarThickness: 26,
+                }],
+            },
+            options: baseOptions(),
+        });
+
+        // 4. Presence split today — doughnut
+        destroyChart('presence');
+        const present = Number(summary.total_checkins) || 0;
+        const late = Number(summary.late_arrivals) || 0;
+        const absent = Number(summary.absentees) || 0;
+        const onTime = Math.max(0, present - late);
+        charts.presence = new Chart(el('presenceSplitChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['On time', 'Late', 'Absent'],
+                datasets: [{
+                    data: [onTime, late, absent],
+                    backgroundColor: [palette.teal, palette.amber, palette.red],
+                    borderWidth: 0,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: { legend: { position: 'bottom', labels: { color: '#64748B', boxWidth: 10, font: { size: 11 } } } },
+            },
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // Wiring
+    // ---------------------------------------------------------------
+
+    function init() {
+        const dates = defaultDates();
+        state.startDate = dates.start;
+        state.endDate = dates.end;
+        el('reportStartDate').value = state.startDate;
+        el('reportEndDate').value = state.endDate;
+
+        el('reportStartDate').addEventListener('change', (e) => { state.startDate = e.target.value; loadReports(); });
+        el('reportEndDate').addEventListener('change', (e) => { state.endDate = e.target.value; loadReports(); });
+        el('reportDepartment').addEventListener('change', (e) => { state.department = e.target.value; loadReports(); });
+        el('reportEmployee').addEventListener('change', (e) => { state.employeeId = e.target.value; loadReports(); });
+
+        loadReports();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

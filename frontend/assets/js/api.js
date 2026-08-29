@@ -1,11 +1,15 @@
 // Centralized API helper (token storage, login/logout, generic apiCall) for the frontend.
-const API_URL = 'http://localhost:8080';
+const API_URL = window.CONFIG?.API_URL || 'http://127.0.0.1:8000';
 
 /**
  * Get the stored JWT token from localStorage
  */
 function getToken() {
-    return localStorage.getItem('token');
+    // Keep older sessions working while login migrates to the namespaced key.
+    const storedToken = localStorage.getItem('token') || localStorage.getItem('checkmate_token');
+    if (storedToken) return storedToken;
+    const cookie = document.cookie.split('; ').find(item => item.startsWith('checkmate_token='));
+    return cookie ? decodeURIComponent(cookie.slice('checkmate_token='.length)) : null;
 }
 
 /**
@@ -57,7 +61,12 @@ async function login(email, password) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.php';
+    document.cookie = 'checkmate_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'checkmate_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    const entryPoint = window.location.pathname.includes('/public/')
+        ? '/public/index.php'
+        : '/index.php';
+    window.location.href = `${entryPoint}?page=login`;
 }
 
 /**
@@ -78,12 +87,40 @@ async function getProfile() {
             }
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        let data = {};
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+            return {
+                success: false,
+                error: `Invalid server response (${response.status})`,
+            };
+        }
+        if (!response.ok) {
+            return {
+                success: false,
+                error: data.error || data.message || `Request failed (${response.status})`,
+            };
+        }
         return data;
     } catch (error) {
         console.error('Profile fetch error:', error);
         return { success: false, error: 'Network error' };
     }
+}
+
+/**
+ * Update the currently signed-in user's password.
+ */
+async function changePassword(oldPassword, newPassword) {
+    return apiCall('/api/profile/password', {
+        method: 'PATCH',
+        body: JSON.stringify({
+            old_password: oldPassword,
+            new_password: newPassword,
+        }),
+    });
 }
 
 /**
@@ -107,7 +144,21 @@ async function apiCall(endpoint, options = {}) {
             headers
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        let data = {};
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+            return { success: false, error: `Invalid server response (${response.status})`, status: response.status };
+        }
+        if (!response.ok) {
+            return {
+                ...data,
+                success: false,
+                error: data.error || data.message || `Request failed (${response.status})`,
+                status: response.status,
+            };
+        }
         return data;
     } catch (error) {
         console.error('API call error:', error);

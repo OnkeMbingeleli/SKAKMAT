@@ -3,10 +3,12 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\LeaveRequestModel;
+use App\Models\LeaveBalanceModel;
 
 class LeaveRequestController
 {
     private LeaveRequestModel $leaveModel;
+    private LeaveBalanceModel $balanceModel;
     private AuthMiddleware $auth;
 
     private const VALID_TYPES = [
@@ -18,6 +20,7 @@ class LeaveRequestController
     public function __construct()
     {
         $this->leaveModel = new LeaveRequestModel();
+        $this->balanceModel = new LeaveBalanceModel();
         $this->auth = new AuthMiddleware();
     }
 
@@ -40,6 +43,24 @@ class LeaveRequestController
             jsonResponse(['error' => 'Invalid leave type'], 400);
         }
 
+        // Block a request that would exceed the employee's remaining
+        // balance for this leave type's current cycle (unpaid leave is
+        // never blocked — see LeaveBalanceModel::hasSufficientBalance()).
+        $sufficient = $this->balanceModel->hasSufficientBalance(
+            (int)$userId,
+            $input['leave_type'],
+            $input['start_date'],
+            $input['end_date']
+        );
+        if (!$sufficient) {
+            $remaining = $this->balanceModel->getRemainingDays((int)$userId, $input['leave_type']);
+            jsonResponse([
+                'error' => $remaining !== null
+                    ? "This request exceeds your remaining {$input['leave_type']} balance ({$remaining} day(s) left)."
+                    : 'This request exceeds your remaining balance for this leave type.',
+            ], 422);
+        }
+
         $id = $this->leaveModel->create([
             'user_id'    => $userId,
             'leave_type' => $input['leave_type'],
@@ -54,13 +75,19 @@ class LeaveRequestController
 
     /**
      * GET /api/leave-requests
+     * Admin: all requests, optionally filtered by ?status=pending|approved|rejected.
+     * Staff: only their own requests.
      */
     public function index(): void
     {
         $payload = $this->auth->requireLogin();
 
         if ($payload['role'] === 'admin') {
-            $list = $this->leaveModel->getAll();
+            $status = $_GET['status'] ?? null;
+            if ($status !== null && $status !== '' && !in_array($status, self::VALID_STATUSES, true)) {
+                jsonResponse(['error' => 'Invalid status filter'], 400);
+            }
+            $list = $this->leaveModel->getAll($status !== '' ? $status : null);
         } else {
             $list = $this->leaveModel->getByUser($payload['user_id']);
         }
@@ -123,7 +150,18 @@ class LeaveRequestController
             if (!in_array($input['status'], self::VALID_STATUSES)) {
                 jsonResponse(['error' => 'Invalid status'], 400);
             }
-            $data['status'] = $input['status'];
+            if (count($data) > 0) {
+                jsonResponse(['error' => 'Update status separately from leave details'], 400);
+            }
+            try {
+                $updated = $this->leaveModel->updateStatus($id, $input['status'], (int)$payload['user_id']);
+            } catch (\RuntimeException $error) {
+                jsonResponse(['error' => $error->getMessage()], 409);
+            }
+            if (!$updated) {
+                jsonResponse(['error' => 'Leave request has already been processed'], 409);
+            }
+            jsonResponse(['success' => true, 'data' => $updated]);
         }
 
         if (empty($data)) {

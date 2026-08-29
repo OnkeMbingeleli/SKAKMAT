@@ -1,14 +1,27 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    $sessionPath = session_save_path();
+    if ($sessionPath && (!is_dir($sessionPath) || !is_writable($sessionPath))) {
+        session_save_path(sys_get_temp_dir());
+    }
     session_start();
 }
 
+$baseUrl = $baseUrl ?? rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+if ($baseUrl === '/' || $baseUrl === '.') {
+    $baseUrl = '';
+}
+
 if (empty($_COOKIE['checkmate_token'])) {
-    header('Location: /public/index.php?page=login');
+    header('Location: ' . $baseUrl . '/index.php?page=login');
     exit;
 }
 
-if (!empty($_COOKIE['checkmate_user'])) {
+if (isset($_GET['role']) && in_array($_GET['role'], ['admin', 'staff'], true)) {
+    $_SESSION['user_role'] = $_GET['role'];
+}
+
+if (empty($_SESSION['user_role']) && !empty($_COOKIE['checkmate_user'])) {
     $user = json_decode($_COOKIE['checkmate_user'], true);
     if ($user) {
         $_SESSION['user_role'] = $user['role'] ?? 'staff';
@@ -16,218 +29,83 @@ if (!empty($_COOKIE['checkmate_user'])) {
     }
 }
 
+if (empty($_SESSION['user_name'])) {
+    $_SESSION['user_name'] = ($_SESSION['user_role'] ?? 'staff') === 'admin' ? 'Admin User' : 'Staff User';
+}
+
 $role = $_SESSION['user_role'] ?? 'staff';
-$name = $_SESSION['user_name'] ?? 'User';
+$currentPage = $_GET['page'] ?? 'dashboard';
 
-// Staff menu
 $staffMenu = [
-    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
-    ['label' => 'Clock In / Out',     'link' => '/public/index.php?page=clock-in-out'],
-    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
-    ['label' => 'Leave',              'link' => '/public/index.php?page=staff-leave'],
-    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
+    ['label' => 'Dashboard', 'i18n' => 'sidebar.dashboard', 'link' => '/index.php?page=dashboard', 'icon' => 'nav-dashboard'],
+    ['label' => 'Clock In / Out', 'i18n' => 'sidebar.clockInOut', 'link' => '/index.php?page=clock-in-out', 'icon' => 'nav-clock'],
+    ['label' => 'Attendance History', 'i18n' => 'sidebar.attendanceHistory', 'link' => '/index.php?page=attendance-history', 'icon' => 'nav-history'],
+    ['label' => 'Leave', 'i18n' => 'sidebar.leave', 'link' => '/index.php?page=staff-leave', 'icon' => 'nav-calendar'],
+    ['label' => 'Settings', 'i18n' => 'sidebar.settings', 'link' => '/index.php?page=settings', 'icon' => 'nav-settings'],
 ];
 
-// Admin menu
 $adminMenu = [
-    ['label' => 'Dashboard',          'link' => '/public/index.php?page=dashboard'],
-    ['label' => 'QR Codes',           'link' => '/public/index.php?page=admin-qr-code'],
-    ['label' => 'Emergency',          'link' => '/public/index.php?page=admin-emergency'],
-    ['label' => 'Employees',          'link' => '/public/index.php?page=admin-employees'],
-    ['label' => 'Attendance History', 'link' => '/public/index.php?page=attendance-history'],
-    ['label' => 'Leave Requests',     'link' => '/public/index.php?page=admin-leave-requests'],
-    ['label' => 'Reports',            'link' => '/public/index.php?page=admin-reports'],
-    ['label' => 'Settings',           'link' => '/public/index.php?page=settings'],
+    ['label' => 'Dashboard', 'i18n' => 'sidebar.dashboard', 'link' => '/index.php?page=dashboard', 'icon' => 'nav-dashboard'],
+    ['label' => 'QR Codes', 'i18n' => 'sidebar.qrCodes', 'link' => '/index.php?page=admin-qr-code', 'icon' => 'nav-qr'],
+    ['label' => 'Emergency', 'i18n' => 'sidebar.emergency', 'link' => '/index.php?page=admin-emergency', 'icon' => 'nav-alert'],
+    ['label' => 'Employees', 'i18n' => 'sidebar.employees', 'link' => '/index.php?page=admin-employees', 'icon' => 'nav-users'],
+    ['label' => 'Attendance History', 'i18n' => 'sidebar.attendanceHistory', 'link' => '/index.php?page=attendance-history', 'icon' => 'nav-history'],
+    ['label' => 'Leave Requests', 'i18n' => 'sidebar.leaveRequests', 'link' => '/index.php?page=admin-leave-requests', 'icon' => 'nav-calendar'],
+    ['label' => 'Reports', 'i18n' => 'sidebar.reports', 'link' => '/index.php?page=admin-reports', 'icon' => 'nav-chart'],
+    ['label' => 'Settings', 'i18n' => 'sidebar.settings', 'link' => '/index.php?page=settings', 'icon' => 'nav-settings'],
 ];
 
-$menu = ($role === 'admin') ? $adminMenu : $staffMenu;
+$menu = $role === 'admin' ? $adminMenu : $staffMenu;
+
+function navIcon(string $icon): string
+{
+    $icons = [
+        'nav-dashboard' => '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>',
+        'nav-qr' => '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"></path><path d="M14 14h2M18 14h2M14 18h6M18 18v2M14 16h4"></path></svg>',
+        'nav-alert' => '<svg viewBox="0 0 24 24"><path d="M12 5a5 5 0 0 0-5 5v3.1L5.2 16a1 1 0 0 0 .8 1.6h12a1 1 0 0 0 .8-1.6L17 13.1V10a5 5 0 0 0-5-5Z"></path><path d="M9.5 20h5M10 5a2 2 0 0 1 4 0"></path></svg>',
+        'nav-users' => '<svg viewBox="0 0 24 24"><path d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20"></path><circle cx="10" cy="8" r="3.5"></circle><path d="M16 5.5a3.5 3.5 0 0 1 0 6.8M16.5 15.5h1A3.5 3.5 0 0 1 21 19v1"></path></svg>',
+        'nav-history' => '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7v5l3.2 2"></path><path d="M4.5 4.5 3 3M3 3v4h4"></path></svg>',
+        'nav-calendar' => '<svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path></svg>',
+        'nav-chart' => '<svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"></path><rect x="7" y="11" width="3" height="6" rx=".8"></rect><rect x="12" y="8" width="3" height="9" rx=".8"></rect><rect x="17" y="5" width="3" height="12" rx=".8"></rect></svg>',
+        'nav-settings' => '<svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"></path></svg>',
+        'nav-clock' => '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>',
+        'nav-logout' => '<svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 8l-4 4 4 4M6 12h12"></path></svg>',
+    ];
+
+    return $icons[$icon] ?? $icons['nav-dashboard'];
+}
 ?>
 
-<!-- Toggle button (visible on mobile) -->
-<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-    ☰
-</button>
-
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2>CheckMate</h2>
-        <span>ATTENDANCEHUB</span>
+    <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+            <strong>CheckMate</strong>
+            <small>ATTENDANCEHUB</small>
+        </div>
     </div>
 
-    <nav class="sidebar-nav">
-        <ul>
-            <?php foreach ($menu as $item): ?>
-                <?php 
-                    $current = basename($_SERVER['PHP_SELF']);
-                    $active = ($current === basename($item['link'])) ? 'active' : '';
-                ?>
-                <li class="<?= $active ?>">
-                    <a href="<?= htmlspecialchars($item['link']) ?>">
-                        <?= htmlspecialchars($item['label']) ?>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+    <div class="workspace-label" data-i18n="<?= $role === 'admin' ? 'sidebar.adminWorkspace' : 'sidebar.staffWorkspace' ?>"><?= $role === 'admin' ? 'ADMIN WORKSPACE' : 'STAFF WORKSPACE' ?></div>
+
+    <nav class="sidebar-nav" aria-label="Primary navigation">
+        <?php foreach ($menu as $item): ?>
+            <?php
+                $query = parse_url($item['link'], PHP_URL_QUERY);
+                parse_str($query ?: '', $params);
+                $itemPage = $params['page'] ?? '';
+                $active = $currentPage === $itemPage ? 'active' : '';
+            ?>
+            <a class="nav-item <?= htmlspecialchars($active) ?>" href="<?= htmlspecialchars($baseUrl . str_replace('/public/index.php', '/index.php', $item['link'])) ?>">
+                <span class="nav-icon" aria-hidden="true"><?= navIcon($item['icon']) ?></span>
+                <span data-i18n="<?= htmlspecialchars($item['i18n']) ?>"><?= htmlspecialchars($item['label']) ?></span>
+            </a>
+        <?php endforeach; ?>
+
+        <a class="nav-item nav-item-logout" href="#" id="sidebarLogoutBtn">
+            <span class="nav-icon" aria-hidden="true"><?= navIcon('nav-logout') ?></span>
+            <span>Log out</span>
+        </a>
     </nav>
 
-    <div class="sidebar-footer">
-        <p>Logged in as <strong><?= htmlspecialchars($name) ?></strong> (<?= htmlspecialchars(ucfirst($role)) ?>)</p>
-        <a href="javascript:void(0)" class="logout-btn" onclick="logoutUser(); return false;">Logout</a>
-    </div>
+    <div class="role-pill"><span class="spark">+</span><?= htmlspecialchars(strtoupper($role)) ?></div>
 </aside>
-
-<!-- Overlay for mobile -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-<!-- Load external sidebar JS -->
-<script src="/assets/js/utils/sidebar.js"></script>
-<script>
-window.logoutUser = function logoutUser() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    document.cookie = 'checkmate_token=; path=/; max-age=0';
-    document.cookie = 'checkmate_user=; path=/; max-age=0';
-    window.location.replace('/public/index.php?page=login');
-};
-</script>
-
-<style>
-/* ── same styles as before ── */
-* { box-sizing: border-box; }
-
-.sidebar-toggle {
-    display: none;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1000;
-    background: #1e2a3a;
-    color: #fff;
-    border: none;
-    font-size: 1.8rem;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 260px;
-    height: 100vh;
-    background: #1e2a3a;
-    color: #ecf0f1;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-    transition: transform 0.3s ease;
-    z-index: 999;
-    box-shadow: 2px 0 12px rgba(0,0,0,0.4);
-    overflow-y: auto;
-}
-
-.sidebar-header {
-    padding: 0 24px 20px 24px;
-    border-bottom: 1px solid #2c3e50;
-    margin-bottom: 16px;
-}
-.sidebar-header h2 {
-    margin: 0;
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: 0.5px;
-}
-.sidebar-header span {
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    color: #7f8c8d;
-}
-
-.sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.sidebar-nav li {
-    margin: 2px 12px;
-    border-radius: 8px;
-    transition: background 0.15s;
-}
-.sidebar-nav li a {
-    display: block;
-    padding: 12px 20px;
-    color: #b0bec5;
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 500;
-    border-radius: 8px;
-    transition: all 0.15s;
-}
-.sidebar-nav li a:hover {
-    background: #2c3e50;
-    color: #fff;
-}
-.sidebar-nav li.active a {
-    background: #2c3e50;
-    color: #fff;
-    border-left: 4px solid #3498db;
-    padding-left: 16px;
-}
-
-.sidebar-footer {
-    margin-top: auto;
-    padding: 20px 24px 10px 24px;
-    border-top: 1px solid #2c3e50;
-    font-size: 0.85rem;
-}
-.sidebar-footer p {
-    margin: 0 0 10px 0;
-    color: #b0bec5;
-}
-.sidebar-footer strong {
-    color: #fff;
-}
-.logout-btn {
-    display: inline-block;
-    background: #c0392b;
-    color: #fff;
-    padding: 6px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.8rem;
-    transition: background 0.15s;
-}
-.logout-btn:hover {
-    background: #e74c3c;
-}
-
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.4);
-    z-index: 998;
-}
-
-@media (max-width: 768px) {
-    .sidebar-toggle {
-        display: block;
-    }
-    .sidebar {
-        transform: translateX(-110%);
-        width: 280px;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .sidebar-overlay.show {
-        display: block;
-    }
-}
-</style>

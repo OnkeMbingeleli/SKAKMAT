@@ -3,15 +3,18 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\QRCodeModel;
+use App\Models\QRSessionModel;
 
 class QRCodeController
 {
     private QRCodeModel $qr;
+    private QRSessionModel $session;
     private AuthMiddleware $auth;
 
     public function __construct()
     {
         $this->qr = new QRCodeModel();
+        $this->session = new QRSessionModel();
         $this->auth = new AuthMiddleware();
     }
 
@@ -27,7 +30,15 @@ class QRCodeController
             ], 400);
         }
 
-        $qr = $this->qr->generate($input['session_id']);
+        $activeSession = $this->session->active();
+        if (!$activeSession || (int)$activeSession['id'] !== (int)$input['session_id']) {
+            jsonResponse([
+                "success" => false,
+                "message" => "QR codes can only be generated for the active session."
+            ], 409);
+        }
+
+        $qr = $this->qr->generate((int)$input['session_id']);
 
         jsonResponse([
             "success" => true,

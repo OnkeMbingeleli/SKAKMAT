@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Models\UserModel;
+use App\Services\Mailer;
 
 class UserController
 {
@@ -118,25 +119,23 @@ class UserController
     }
 
     /**
-     * GET /api/users (admin only) – filtered, paginated list.
-     * Query params: search, department, position, role, page, limit, attendance=true
+     * GET /api/users (admin only) – filtered user list
      */
     public function index(): void
     {
         $this->auth->requireAdmin();
 
-        $page = max(1, (int)($_GET['page'] ?? 1));
-        $limit = max(1, min(100, (int)($_GET['limit'] ?? 20)));
-        $offset = ($page - 1) * $limit;
-
-        $filters = array_filter([
-            'search'     => $_GET['search'] ?? null,
+        $filters = [
+            'search' => $_GET['search'] ?? null,
             'department' => $_GET['department'] ?? null,
-            'position'   => $_GET['position'] ?? null,
-            'role'       => $_GET['role'] ?? null,
-        ]);
+            'position' => $_GET['position'] ?? null,
+            'role' => $_GET['role'] ?? null,
+        ];
 
-        $withAttendance = ($_GET['attendance'] ?? '') === 'true';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $limit = min(50, max(1, (int)($_GET['limit'] ?? 20)));
+        $offset = ($page - 1) * $limit;
+        $withAttendance = (($_GET['attendance'] ?? 'false') === 'true');
 
         $users = $this->userModel->getUsers($filters, $withAttendance, $limit, $offset);
         $total = $this->userModel->countUsers($filters);
@@ -148,14 +147,15 @@ class UserController
                 'total' => $total,
                 'page' => $page,
                 'limit' => $limit,
-                'departments' => $this->userModel->getDepartments(),
-                'positions' => $this->userModel->getPositions(),
+                'departments' => $this->userModel->getDepartments($filters['role'] ?: null),
+                'positions' => $this->userModel->getPositions($filters['role'] ?: null),
+                'roles' => ['admin', 'staff'],
             ],
         ]);
     }
 
     /**
-     * GET /api/users/{id} (admin only) – single user + their attendance summary.
+     * GET /api/users/{id} (admin only) – single user detail
      */
     public function show(int $id): void
     {
@@ -168,7 +168,13 @@ class UserController
 
         $attendance = $this->userModel->getUserAttendanceSummary($id);
 
-        jsonResponse(['success' => true, 'data' => ['user' => $user, 'attendance' => $attendance]]);
+        jsonResponse([
+            'success' => true,
+            'data' => [
+                'user' => $user,
+                'attendance' => $attendance,
+            ],
+        ]);
     }
 
     /**
@@ -201,7 +207,7 @@ class UserController
             jsonResponse(['error' => 'Email already exists'], 409);
         }
 
-        $generatedPassword = $this->generatePassword(8);
+        $generatedPassword = $this->generatePassword(12);
 
         $id = $this->userModel->createUser([
             'first_name' => $input['first_name'],
@@ -214,12 +220,24 @@ class UserController
         ]);
 
         $user = $this->userModel->getUserProfile($id);
+        $mailer = new Mailer();
+
+        if (!$mailer->sendWelcomeCredentials($user ?? $input, $generatedPassword)) {
+            try {
+                $this->userModel->deleteUser($id);
+            } catch (\Throwable $cleanupError) {
+                error_log('CheckMate createStaff cleanup failed: ' . $cleanupError->getMessage());
+            }
+            jsonResponse([
+                'success' => false,
+                'error' => 'Employee was not created because the welcome email could not be sent. Configure the PHP mail service/SMTP settings and try again.'
+            ], 502);
+        }
 
         jsonResponse([
-            'success'  => true,
-            'message'  => 'Staff member created',
-            'user'     => $user,
-            'password' => $generatedPassword
+            'success' => true,
+            'message' => 'Employee created and login credentials sent by email',
+            'user' => $user,
         ], 201);
     }
 
@@ -249,6 +267,35 @@ class UserController
         $this->userModel->updateUser($id, $data);
         $user = $this->userModel->getUserProfile($id);
         jsonResponse(['success' => true, 'user' => $user]);
+    }
+
+    /**
+     * DELETE /api/users/{id} (admin only) - remove a staff member.
+     */
+    public function destroy(int $id): void
+    {
+        $this->auth->requireAdmin();
+
+        $existing = $this->userModel->findById($id);
+        if (!$existing) {
+            jsonResponse(['error' => 'User not found'], 404);
+        }
+
+        if (($existing['role'] ?? '') !== 'staff') {
+            jsonResponse(['error' => 'Only staff employees can be removed'], 400);
+        }
+
+        try {
+            $deleted = $this->userModel->deleteUser($id);
+        } catch (\Throwable $e) {
+            jsonResponse(['error' => 'Unable to remove employee because related records still exist'], 409);
+        }
+
+        if (!$deleted) {
+            jsonResponse(['error' => 'Unable to remove employee'], 400);
+        }
+
+        jsonResponse(['success' => true, 'message' => 'Employee removed']);
     }
 
     /**
@@ -285,6 +332,12 @@ class UserController
     private function generatePassword(int $length = 8): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
-        return substr(str_shuffle($chars), 0, $length);
+        
+        $password = '';
+        $max = strlen($chars) - 1;
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $chars[random_int(0, $max)];
+        }
+        return $password;
     }
 }

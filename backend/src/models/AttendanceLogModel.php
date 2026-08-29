@@ -15,7 +15,10 @@ class AttendanceLogModel
     }
 
     /**
-     * Scan QR, clock in employee and rotate QR
+     * Scan QR. First scan of the day clocks the employee in; if they're
+     * already clocked in for this session, the same scan clocks them out
+     * instead (so "scan to sign in, scan again to sign out" just works).
+     * Either way, the QR is rotated so the used code can't be reused.
      */
     public function scan(string $token, int $userId)
     {
@@ -29,9 +32,9 @@ class AttendanceLogModel
             ];
         }
 
-        // Prevent duplicate clock-ins
+        // Is this user already clocked in for this session?
         $check = $this->db->prepare("
-            SELECT id
+            SELECT id, clock_in_at
             FROM attendance_logs
             WHERE
                 user_id = ?
@@ -45,14 +48,42 @@ class AttendanceLogModel
             $qr['session_id']
         ]);
 
-        if ($check->fetch()) {
+        $openRecord = $check->fetch();
+
+        // Rotate the QR regardless of which branch we take below — a used
+        // code (whether for clock-in or clock-out) should never be scannable
+        // again.
+        if (!$this->qrModel->use($qr['id'], $userId)) {
             return [
                 "success" => false,
-                "message" => "You have already clocked in."
+                "message" => "This QR code has already been used. Scan the new code instead."
+            ];
+        }
+        $nextQr = $this->qrModel->generate($qr['session_id']);
+
+        if ($openRecord) {
+            // ---- Second scan of the day: clock out ----
+            $this->clockOut((int)$openRecord['id']);
+
+            $durationStmt = $this->db->prepare("
+                SELECT TIMEDIFF(clock_out_at, clock_in_at) AS duration
+                FROM attendance_logs
+                WHERE id = ?
+            ");
+            $durationStmt->execute([$openRecord['id']]);
+            $duration = $durationStmt->fetchColumn();
+
+            return [
+                "success" => true,
+                "action" => "clock_out",
+                "message" => "Clock out successful. You were logged in for " . ($duration ?: '0:00:00') . ".",
+                "attendance_id" => (int)$openRecord['id'],
+                "duration" => $duration,
+                "next_qr" => $nextQr
             ];
         }
 
-        // Create attendance record
+        // ---- First scan of the day: clock in ----
         $insert = $this->db->prepare("
             INSERT INTO attendance_logs
             (
@@ -80,19 +111,9 @@ class AttendanceLogModel
 
         $attendanceId = (int)$this->db->lastInsertId();
 
-        // Mark current QR as used
-        $this->qrModel->use(
-            $qr['id'],
-            $userId
-        );
-
-        // Generate next QR automatically
-        $nextQr = $this->qrModel->generate(
-            $qr['session_id']
-        );
-
         return [
             "success" => true,
+            "action" => "clock_in",
             "message" => "Clock in successful.",
             "attendance_id" => $attendanceId,
             "next_qr" => $nextQr
@@ -216,6 +237,27 @@ class AttendanceLogModel
         $stmt->execute([$userId]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Today's attendance record for one user, or null if they haven't
+     * scanned yet today. Used by the Clock In/Out page to decide whether
+     * the next scan should clock the person in or out.
+     */
+    public function getTodayRecord(int $userId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT a.id, a.status, a.clock_in_at, a.clock_out_at
+            FROM attendance_logs a
+            JOIN qr_sessions q ON a.session_id = q.id
+            WHERE a.user_id = ?
+            AND q.date = CURDATE()
+            ORDER BY a.id DESC
+            LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 
 }

@@ -1,5 +1,5 @@
 <?php
-$page = 'qr-code';
+$page = 'admin-qr-code';
 $title = 'QR Codes - CheckMate';
 ob_start();
 ?>
@@ -7,7 +7,7 @@ ob_start();
 <div class="cm-hero">
     <div>
         <h1 class="cm-display">QR Codes</h1>
-        <p>Display this code at the entrance — it's the only way employees can clock in or out.</p>
+        <p>Display this code at the entrance — it's the only way employees can clock in or out. A new code is generated automatically every time someone scans.</p>
     </div>
 </div>
 
@@ -22,9 +22,10 @@ ob_start();
         Loading active session...
     </div>
 
-    <button id="generateQrButton" class="cm-btn primary" style="width:100%; justify-content:center; padding:14px;">
-        <span>🔄</span> Generate QR Code
-    </button>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <button id="enableQrButton" class="cm-btn primary" type="button" style="justify-content:center; padding:14px;">Enable QR</button>
+        <button id="disableQrButton" class="cm-btn" type="button" style="justify-content:center; padding:14px;">Disable QR</button>
+    </div>
 
     <div id="qrResult" style="display:none; margin-top:16px; padding:12px; border-radius:8px; background:var(--green-light); border:1px solid var(--green);">
         ✅ QR Code generated successfully!
@@ -32,10 +33,13 @@ ob_start();
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="/assets/js/config.js"></script>
 <script>
-const API_BASE = 'http://localhost:8080';
+const API_BASE = window.CONFIG?.API_URL || 'http://127.0.0.1:8000';
 const TOKEN_KEY = 'token';
-let countdownInterval = null;
+let activeSession = null;
+let currentQrToken = null;
+let pollTimer = null;
 
 function getToken() {
     return localStorage.getItem(TOKEN_KEY) || null;
@@ -73,24 +77,16 @@ async function apiRequest(url, options = {}) {
     return data;
 }
 
-function stopCountdown() {
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-    }
-}
-
 function setQrMeta(message) {
     const el = document.getElementById('qrMeta');
-    if (el) {
-        el.textContent = message;
-    }
+    if (el) el.textContent = message;
 }
 
 function renderQr(token) {
+    currentQrToken = token || null;
     const qrDisplay = document.getElementById('qrCodeDisplay');
     if (!token) {
-        qrDisplay.innerHTML = '<div style="color:#94A3B8; font-size:14px;">No active QR code<br>Generate one below</div>';
+        qrDisplay.innerHTML = '<div style="color:#94A3B8; font-size:14px;">No active QR code<br>Enable QR to create one</div>';
         return;
     }
 
@@ -98,11 +94,8 @@ function renderQr(token) {
         QRCode.toDataURL(token, {
             width: 220,
             margin: 2,
-            color: {
-                dark: '#0f172a',
-                light: '#ffffff'
-            }
-        }, function(error, url) {
+            color: { dark: '#0f172a', light: '#ffffff' }
+        }, function (error, url) {
             if (error) {
                 console.error('QR render error:', error);
                 qrDisplay.innerHTML = '<div style="color:#94A3B8; font-size:14px;">Unable to render QR code</div>';
@@ -121,6 +114,42 @@ function showResult(message, isSuccess = true) {
     result.style.background = isSuccess ? 'var(--green-light)' : 'var(--red-light)';
     result.style.borderColor = isSuccess ? 'var(--green)' : 'var(--red)';
     result.textContent = message;
+    clearTimeout(showResult._t);
+    showResult._t = setTimeout(() => { result.style.display = 'none'; }, 3500);
+}
+
+function updateQrControls(enabled) {
+    document.getElementById('enableQrButton').disabled = enabled;
+    document.getElementById('disableQrButton').disabled = !enabled;
+}
+
+/**
+ * Silently re-checks the active QR code without disturbing button state or
+ * showing loading text — used for polling so the display auto-refreshes
+ * the moment someone scans and the backend rotates the code.
+ */
+async function refreshActiveQr() {
+    if (!activeSession) return;
+    try {
+        const activeQr = await apiRequest(`${API_BASE}/api/qr-codes/active`);
+        const qr = activeQr && activeQr.data ? activeQr.data : null;
+        if (qr && qr.token && qr.token !== currentQrToken) {
+            renderQr(qr.token);
+            setQrMeta(`QR is enabled for ${activeSession.date}. Code refreshed automatically.`);
+        }
+    } catch (error) {
+        // Silent — this is a background poll, don't spam the UI on a
+        // transient network hiccup.
+        console.warn('QR poll error:', error);
+    }
+}
+
+function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(refreshActiveQr, 4000);
+}
+function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
 async function loadActiveQrCode() {
@@ -133,17 +162,34 @@ async function loadActiveQrCode() {
     }
 
     try {
+        const activeSessionResponse = await apiRequest(`${API_BASE}/api/qr-sessions/active`);
+        activeSession = activeSessionResponse.data || null;
+        updateQrControls(Boolean(activeSession));
+
+        if (!activeSession) {
+            renderQr(null);
+            setQrMeta('QR is disabled. Enable it to create a session.');
+            stopPolling();
+            return;
+        }
+
         const activeQr = await apiRequest(`${API_BASE}/api/qr-codes/active`);
         const qr = activeQr && activeQr.data ? activeQr.data : null;
 
         if (!qr || !qr.token) {
-            renderQr(null);
-            setQrMeta('No active QR code. Generate one below.');
-            return;
+            // Session is active but has no live QR yet (edge case) — generate
+            // one automatically so the admin never has to click a button.
+            const generated = await apiRequest(`${API_BASE}/api/qr-codes/generate`, {
+                method: 'POST',
+                body: JSON.stringify({ session_id: activeSession.id })
+            });
+            renderQr(generated?.data?.token || null);
+        } else {
+            renderQr(qr.token);
         }
 
-        renderQr(qr.token);
-        setQrMeta('Active QR session is running.');
+        setQrMeta(`QR is enabled for ${activeSession.date}. It rotates automatically after every scan.`);
+        startPolling();
     } catch (error) {
         console.error('Fetch active QR error:', error);
         renderQr(null);
@@ -151,80 +197,67 @@ async function loadActiveQrCode() {
     }
 }
 
-async function generateQRCode() {
-    const btn = document.getElementById('generateQrButton');
-    const token = getToken();
-
-    if (!token) {
-        showResult('Please log in as an admin first.', false);
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> Generating...';
-    showResult('Generating QR code...', true);
-
+async function enableQRCode() {
+    const button = document.getElementById('enableQrButton');
+    button.disabled = true;
     try {
         const now = new Date();
-
-        // Backend columns are TIME, not full ISO datetimes — send HH:MM:SS.
-        const toTimeString = (d) => d.toTimeString().slice(0, 8);
-
-        const clockInDeadline = toTimeString(new Date(now.getTime() + 30 * 60000));
-        const clockOutDeadline = toTimeString(new Date(now.getTime() + 8 * 60 * 60000));
-
-        let sessionResponse;
-        try {
-            sessionResponse = await apiRequest(`${API_BASE}/api/qr-sessions/enable`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    clock_in_deadline: clockInDeadline,
-                    clock_out_deadline: clockOutDeadline
-                })
-            });
-        } catch (sessionError) {
-            if (sessionError.message && sessionError.message.toLowerCase().includes('already exists')) {
-                const activeSession = await apiRequest(`${API_BASE}/api/qr-sessions/active`);
-                sessionResponse = { session_id: activeSession && activeSession.data ? activeSession.data.id : null };
-            } else {
-                throw sessionError;
-            }
-        }
-
-        const sessionId = sessionResponse && (sessionResponse.session_id || (sessionResponse.data && sessionResponse.data.session_id));
-
-        if (!sessionId) {
-            throw new Error('No active session was returned by the backend.');
-        }
-
-        const qrResponse = await apiRequest(`${API_BASE}/api/qr-codes/generate`, {
+        const toTimeString = date => date.toTimeString().slice(0, 8);
+        const response = await apiRequest(`${API_BASE}/api/qr-sessions/enable`, {
             method: 'POST',
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({
+                clock_in_deadline: toTimeString(new Date(now.getTime() + 30 * 60000)),
+                clock_out_deadline: toTimeString(new Date(now.getTime() + 8 * 60 * 60000))
+            })
         });
+        activeSession = { id: response.session_id, date: new Date().toISOString().slice(0, 10) };
 
-        const qr = qrResponse && qrResponse.data ? qrResponse.data : null;
-        if (!qr || !qr.token) {
-            throw new Error('The backend did not return a QR token.');
-        }
-
-        renderQr(qr.token);
-        setQrMeta('New QR code generated successfully.');
-        showResult('✅ QR Code generated successfully!', true);
+        // Enable always generates the first code automatically — there's
+        // no separate "Generate" button anymore.
+        const generated = await apiRequest(`${API_BASE}/api/qr-codes/generate`, {
+            method: 'POST',
+            body: JSON.stringify({ session_id: activeSession.id })
+        });
+        renderQr(generated?.data?.token || null);
+        updateQrControls(true);
+        setQrMeta(`QR is enabled for ${activeSession.date}. It rotates automatically after every scan.`);
+        showResult('QR session enabled.', true);
+        startPolling();
     } catch (error) {
-        console.error('Generate QR error:', error);
-        renderQr(null);
-        setQrMeta('Unable to generate QR code.');
-        showResult('❌ ' + (error.message || 'Error generating QR code. Please try again.'), false);
+        showResult(error.message || 'Unable to enable QR.', false);
+        await loadActiveQrCode();
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>🔄</span> Generate QR Code';
+        button.disabled = false;
+    }
+}
+
+async function disableQRCode() {
+    if (!activeSession?.id) return;
+    const button = document.getElementById('disableQrButton');
+    button.disabled = true;
+    try {
+        await apiRequest(`${API_BASE}/api/qr-sessions/${activeSession.id}/disable`, { method: 'PATCH' });
+        activeSession = null;
+        stopPolling();
+        renderQr(null);
+        setQrMeta('QR is disabled. Enable it when you are ready to accept attendance scans.');
+        updateQrControls(false);
+        showResult('QR session disabled.', true);
+    } catch (error) {
+        showResult(error.message || 'Unable to disable QR.', false);
+        button.disabled = false;
     }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    stopCountdown();
-    document.getElementById('generateQrButton').addEventListener('click', generateQRCode);
+    document.getElementById('enableQrButton').addEventListener('click', enableQRCode);
+    document.getElementById('disableQrButton').addEventListener('click', disableQRCode);
+    updateQrControls(false);
     loadActiveQrCode();
+});
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopPolling();
+    else if (activeSession) startPolling();
 });
 </script>
 

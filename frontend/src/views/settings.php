@@ -196,6 +196,7 @@ $darkModeOn =
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     >
+    <link rel="stylesheet" href="/assets/css/app.css">
 
     <style>
 
@@ -214,6 +215,8 @@ $darkModeOn =
            BODY
         ===================================================== */
 
+        :root { --primary: #0B574C; --primary-dark: #0A5348; --success: #0B574C; }
+
         body {
 
             font-family:
@@ -225,7 +228,7 @@ $darkModeOn =
                 Arial,
                 sans-serif;
 
-            background: #f5f7fa;
+            background: #f8fafc;
 
             color: #1d2a3a;
 
@@ -241,7 +244,7 @@ $darkModeOn =
 
         .page-shell {
 
-            margin-left: 280px;
+            margin-left: 246px;
 
             padding:
                 30px
@@ -369,7 +372,7 @@ $darkModeOn =
             background:
                 <?= $isAdmin
                     ? '#7c3aed'
-                    : '#0d9488'
+                    : '#0B574C'
                 ?>;
 
             color: #ffffff;
@@ -469,13 +472,13 @@ $darkModeOn =
 
         .form-group input:focus {
 
-            border-color: #0d9488;
+            border-color: #0B574C;
 
             background: #ffffff;
 
             box-shadow:
                 0 0 0 3px
-                rgba(13, 148, 136, .08);
+                rgba(11, 87, 76, .08);
         }
 
 
@@ -531,7 +534,7 @@ $darkModeOn =
 
         .btn-primary {
 
-            background: #0f766e;
+            background: #0B574C;
 
             color: #ffffff;
         }
@@ -539,7 +542,7 @@ $darkModeOn =
 
         .btn-primary:hover {
 
-            background: #0d5f58;
+            background: #0A5348;
         }
 
 
@@ -673,7 +676,7 @@ $darkModeOn =
         .switch input:checked
         + .slider {
 
-            background: #0f766e;
+            background: #0B574C;
         }
 
 
@@ -850,7 +853,7 @@ $darkModeOn =
 
             background: #1a212b;
 
-            border-color: #0d9488;
+            border-color: #0B574C;
         }
 
 
@@ -963,12 +966,22 @@ $darkModeOn =
             }
         }
 
+        /* Keep this standalone page aligned with the shared shell. */
+        .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 10; width: 246px; height: 100vh; }
+        .topbar { margin-left: 246px; }
+        .page-shell { margin-left: 246px; min-height: calc(100vh - 76px); }
+        @media (max-width: 760px) {
+            .sidebar { position: static; width: 100%; height: auto; }
+            .topbar { margin-left: 0; }
+            .page-shell { margin-left: 0; }
+        }
+
     </style>
 
 </head>
 
 
-<body>
+<body data-role="<?= htmlspecialchars($_SESSION['user_role']) ?>">
 
 <?php
 /*
@@ -1352,7 +1365,9 @@ include __DIR__ . '/partials/header.php';
      JAVASCRIPT FILES
 ========================================================= -->
 
+<script src="/assets/js/config.js"></script>
 <script src="/assets/js/api.js"></script>
+<script src="/assets/js/app-preferences.js"></script>
 
 <script src="/assets/js/login.js"></script>
 
@@ -2442,54 +2457,10 @@ include __DIR__ . '/partials/header.php';
     |--------------------------------------------------------------------------
     | HEADER DARK MODE SYNC
     |--------------------------------------------------------------------------
+    | app-preferences.js (loaded above) owns the click handler and the
+    | actual toggling now. We just keep the on-page switch in sync via the
+    | shared event it fires.
     */
-
-    if (headerDarkModeBtn) {
-
-        /*
-        |--------------------------------------------------------------
-        | Listen for clicks on the header button.
-        |
-        | IMPORTANT:
-        | The header itself already sends the API request.
-        | We only synchronize the settings switch here.
-        |--------------------------------------------------------------
-        */
-
-        headerDarkModeBtn.addEventListener(
-            'click',
-            function () {
-
-                const enabled =
-                    headerDarkModeBtn.classList.contains(
-                        'active'
-                    );
-
-
-                if (darkModeSwitch) {
-
-                    darkModeSwitch.checked =
-                        enabled;
-                }
-
-
-                document.body.classList.toggle(
-                    'dark',
-                    enabled
-                );
-
-
-                localStorage.setItem(
-                    'checkmate_dark_mode',
-                    enabled
-                        ? 'true'
-                        : 'false'
-                );
-
-            }
-        );
-
-    }
 
 
     /*

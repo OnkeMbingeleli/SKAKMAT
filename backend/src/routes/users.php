@@ -1,5 +1,8 @@
 <?php
 use App\Controllers\UserController;
+use App\Controllers\EmployeeInsightController;
+use App\Controllers\EmployeeContractController;
+use App\Controllers\EmployeeImportController;
 
 $controller = new UserController();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -54,4 +57,32 @@ if ($method === 'POST' && $path === '/users/staff') {
 
 if ($method === 'PATCH' && preg_match('#^/users/(\d+)$#', $path, $matches)) {
     $controller->updateUser((int)$matches[1], $input);
+}
+
+if ($method === 'DELETE' && preg_match('#^/users/(\d+)$#', $path, $matches)) {
+    $controller->destroy((int)$matches[1]);
+}
+
+// ------------------- LEAVE BALANCE / AI ANALYSIS / CONTRACTS -------------------
+$insightController = new EmployeeInsightController();
+$contractController = new EmployeeContractController();
+$importController = new EmployeeImportController();
+
+// GET /api/users/me/leave-balance (any authenticated employee, own balance only)
+if ($method === 'GET' && $path === '/users/me/leave-balance') {
+    $insightController->myBalance();
+}
+
+// GET /api/users/{id}/analysis (admin only) — behaviour + RSA leave signals
+if ($method === 'GET' && preg_match('#^/users/(\d+)/analysis$#', $path, $matches)) {
+    $insightController->show((int)$matches[1]);
+}
+
+// POST /api/users/{id}/contract (admin only) — set/replace an employee's contract
+if ($method === 'POST' && preg_match('#^/users/(\d+)/contract$#', $path, $matches)) {
+    $contractController->store((int)$matches[1], $input);
+}
+
+if ($method === 'POST' && $path === '/employee-imports') {
+    $importController->store($input);
 }

@@ -118,4 +118,20 @@ class AttendanceLogController
         ]);
     }
 
+    /**
+     * GET /api/attendance/mine (authenticated)
+     * Today's attendance record for the logged-in user, or null if they
+     * haven't scanned yet today. Drives the Clock In/Out button state.
+     */
+    public function getMine(): void
+    {
+        $payload = $this->auth->requireLogin();
+        $userId = (int)$payload['user_id'];
+
+        jsonResponse([
+            "success" => true,
+            "data" => $this->attendance->getTodayRecord($userId)
+        ]);
+    }
+
 }

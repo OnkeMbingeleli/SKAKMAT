@@ -37,44 +37,86 @@ class ReportController
             jsonResponse(['error' => 'End date cannot be before start date'], 400);
         }
 
-        if (!in_array($type, ['daily', 'weekly', 'monthly'], true)) {
+        if (!in_array($type, ['daily', 'weekly', 'monthly', 'dashboard'], true)) {
             $type = 'daily';
         }
 
-        $employees = $this->userModel->getUsers(['role' => 'staff'], false, 200, 0);
-        $rows = match ($type) {
-            'weekly' => $this->reportModel->getWeekly($startDate, $endDate, $department, $employeeId),
-            'monthly' => $this->reportModel->getMonthly($startDate, $endDate, $department, $employeeId),
-            default => $this->reportModel->getDaily($startDate, $endDate, $department, $employeeId),
-        };
+        try {
+            $employeeFilters = ['role' => 'staff'];
+            if ($department) {
+                $employeeFilters['department'] = $department;
+            }
+            $employees = $this->userModel->getUsers($employeeFilters, false, 200, 0);
+            if ($type === 'dashboard') {
+                $monthStart = date('Y-m-d', strtotime($endDate . ' -27 days'));
+                $weeklyRows = $this->reportModel->getDaily($startDate, $endDate, $department, $employeeId);
+                $monthlyRows = $this->reportModel->getWeekly($monthStart, $endDate, $department, $employeeId);
+                $summary = $this->reportModel->getSummary($startDate, $endDate, $department, $employeeId);
 
-        $summary = $this->reportModel->getSummary($startDate, $endDate, $department, $employeeId);
+                jsonResponse([
+                    'success' => true,
+                    'data' => [
+                        'summary' => $summary,
+                        'weekly_rows' => $weeklyRows,
+                        'monthly_rows' => array_slice($monthlyRows, -4),
+                        'type' => $type,
+                        'filters' => [
+                            'start_date' => $startDate,
+                            'end_date' => $endDate,
+                            'department' => $department,
+                            'employee_id' => $employeeId,
+                        ],
+                        'meta' => [
+                            'departments' => $this->userModel->getDepartments('staff'),
+                            'employees' => array_map(fn ($user) => [
+                                'id' => $user['id'],
+                                'name' => trim($user['first_name'] . ' ' . $user['last_name']),
+                            ], $employees),
+                            'staff_count' => $this->reportModel->getStaffCount($department, $employeeId),
+                        ],
+                    ],
+                ]);
+            }
 
-        if ($format === 'csv') {
-            $this->exportCsv($type, $rows, $startDate, $endDate, $department, $employeeId);
+            $rows = match ($type) {
+                'weekly' => $this->reportModel->getWeekly($startDate, $endDate, $department, $employeeId),
+                'monthly' => $this->reportModel->getMonthly($startDate, $endDate, $department, $employeeId),
+                default => $this->reportModel->getDaily($startDate, $endDate, $department, $employeeId),
+            };
+
+            $summary = $this->reportModel->getSummary($startDate, $endDate, $department, $employeeId);
+
+            if ($format === 'csv') {
+                $this->exportCsv($type, $rows, $startDate, $endDate, $department, $employeeId);
+            }
+
+            jsonResponse([
+                'success' => true,
+                'data' => [
+                    'summary' => $summary,
+                    'rows' => $rows,
+                    'type' => $type,
+                    'filters' => [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'department' => $department,
+                        'employee_id' => $employeeId,
+                    ],
+                    'meta' => [
+                        'departments' => $this->userModel->getDepartments('staff'),
+                        'employees' => array_map(fn ($user) => [
+                            'id' => $user['id'],
+                            'name' => trim($user['first_name'] . ' ' . $user['last_name']),
+                        ], $employees),
+                        'staff_count' => $this->reportModel->getStaffCount($department, $employeeId),
+                    ],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            error_log('CheckMate reports error: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'Unable to load reports right now. Please check the database connection and report query.'], 500);
         }
 
-        jsonResponse([
-            'success' => true,
-            'data' => [
-                'summary' => $summary,
-                'rows' => $rows,
-                'type' => $type,
-                'filters' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'department' => $department,
-                    'employee_id' => $employeeId,
-                ],
-                'meta' => [
-                    'departments' => $this->userModel->getDepartments(),
-                    'employees' => array_map(fn ($user) => [
-                        'id' => $user['id'],
-                        'name' => trim($user['first_name'] . ' ' . $user['last_name']),
-                    ], $employees),
-                ],
-            ],
-        ]);
     }
 
     private function exportCsv(string $type, array $rows, string $startDate, string $endDate, ?string $department, ?int $employeeId): void
@@ -84,7 +126,6 @@ class ReportController
 
         $output = fopen('php://output', 'w');
         fputcsv($output, ['Period', 'Start Date', 'End Date', 'Present Count', 'Total Check-ins', 'Total Check-outs', 'Late Arrivals']);
-
         foreach ($rows as $row) {
             fputcsv($output, [
                 $row['period'] ?? '',
@@ -96,7 +137,6 @@ class ReportController
                 $row['late_arrivals'] ?? 0,
             ]);
         }
-
         fclose($output);
         exit;
     }
