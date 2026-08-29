@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CheckMate · Login</title>
+    <title>Skakmat · Login</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
     <!-- Font Awesome 6 -->
@@ -399,7 +399,7 @@
         </form>
 
         <div class="footnote">
-            Admin accounts are provisioned by another administrator. <a class="highlight" href="mailto:onkembingeleli22@gmail.com?subject=CheckMate%20admin%20access%20request">Contact IT</a> if you need access.
+            Admin accounts are provisioned by another administrator. <a class="highlight" href="mailto:onkembingeleli22@gmail.com?subject=Skakmat%20admin%20access%20request">Contact IT</a> if you need access.
         </div>
     </div>
 </div>

@@ -11,7 +11,7 @@ class EmailService
     public function send(string $toEmail, string $toName, string $subject, string $htmlBody): bool
     {
         $fromEmail = getenv('MAIL_FROM') ?: 'no-reply@' . ($_SERVER['SERVER_NAME'] ?? 'localhost');
-        $fromName  = getenv('MAIL_FROM_NAME') ?: 'CheckMate';
+        $fromName  = getenv('MAIL_FROM_NAME') ?: 'Skakmat';
 
         $headers  = "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";

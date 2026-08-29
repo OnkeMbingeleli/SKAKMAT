@@ -1,6 +1,6 @@
 <?php
 $page = 'admin-reports';
-$title = 'Reports - CheckMate';
+$title = 'Reports - Skakmat';
 ob_start();
 ?>
 
@@ -74,7 +74,7 @@ body[data-page="admin-reports"] .reports-filter-panel {
     padding: 14px 18px 18px;
 }body[data-page="admin-reports"] .chart-frame-donut {
     max-width: none;
-}.checkmate-svg-chart {
+}.skakmat-svg-chart {
     width: 100%;
     height: 100%;
     display: block;

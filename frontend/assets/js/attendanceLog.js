@@ -15,19 +15,19 @@
 
     function getToken() {
         return localStorage.getItem('token')
-            || localStorage.getItem('checkmate_token')
+            || localStorage.getItem('skakmat_token')
             || document.cookie
                 .split('; ')
-                .find(c => c.startsWith('checkmate_token='))
+                .find(c => c.startsWith('skakmat_token='))
                 ?.split('=').slice(1).join('=') || '';
     }
 
     function getCurrentUser() {
         try {
-            const stored = localStorage.getItem('user') || localStorage.getItem('checkmate_user');
+            const stored = localStorage.getItem('user') || localStorage.getItem('skakmat_user');
             if (stored) return JSON.parse(stored);
         } catch (e) {}
-        const cookie = document.cookie.split('; ').find(c => c.startsWith('checkmate_user='));
+        const cookie = document.cookie.split('; ').find(c => c.startsWith('skakmat_user='));
         if (cookie) {
             try { return JSON.parse(decodeURIComponent(cookie.split('=').slice(1).join('='))); } catch (e) {}
         }

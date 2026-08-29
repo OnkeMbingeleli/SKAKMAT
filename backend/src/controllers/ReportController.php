@@ -113,7 +113,7 @@ class ReportController
                 ],
             ]);
         } catch (\Throwable $e) {
-            error_log('CheckMate reports error: ' . $e->getMessage());
+            error_log('Skakmat reports error: ' . $e->getMessage());
             jsonResponse(['success' => false, 'error' => 'Unable to load reports right now. Please check the database connection and report query.'], 500);
         }
 

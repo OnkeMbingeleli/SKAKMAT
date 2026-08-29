@@ -1,6 +1,6 @@
 <?php
 $page = 'admin-employees';
-$title = 'Employees - CheckMate';
+$title = 'Employees - Skakmat';
 ob_start();
 ?>
 

@@ -1,4 +1,4 @@
-// CheckMate i18n: translates elements tagged with data-i18n (textContent) and
+// Skakmat i18n: translates elements tagged with data-i18n (textContent) and
 // data-i18n-placeholder (placeholder attr), for all 11 South African official
 // languages. Included once, in header.php, so it's on every page.
 //
@@ -464,12 +464,12 @@ const CM_TRANSLATIONS = {
     // can call this instead of maintaining its own separate translation map.
     window.applyTranslations = applyTranslations;
 
-    window.addEventListener('checkmateLanguageChanged', function (event) {
+    window.addEventListener('skakmatLanguageChanged', function (event) {
         applyTranslations(event.detail && event.detail.language);
     });
 
     function init() {
-        applyTranslations(localStorage.getItem('checkmate_language') || 'English');
+        applyTranslations(localStorage.getItem('skakmat_language') || 'English');
     }
 
     if (document.readyState === 'loading') {

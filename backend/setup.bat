@@ -1,10 +1,10 @@
 @echo off
-REM CheckMate Backend Setup Script for Windows
+REM Skakmat Backend Setup Script for Windows
 REM Configures the bundled PHPMailer email sender
 
 echo.
 echo ================================
-echo CheckMate Backend Setup
+echo Skakmat Backend Setup
 echo ================================
 echo.
 

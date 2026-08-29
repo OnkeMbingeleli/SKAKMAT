@@ -1,4 +1,4 @@
-# 🚀 CheckMate - Quick Installation & Setup Guide
+# 🚀 Skakmat - Quick Installation & Setup Guide
 
 ## Pre-Installation Requirements
 - PHP 7.4 or higher
@@ -53,8 +53,8 @@ MAIL_PORT=587
 MAIL_USERNAME=your-gmail@gmail.com          # ← Your Gmail address
 MAIL_PASSWORD=xxxx xxxx xxxx xxxx           # ← The 16-char app password (no spaces)
 MAIL_FROM=your-gmail@gmail.com
-MAIL_FROM_NAME=CheckMate
-APP_NAME=CheckMate
+MAIL_FROM_NAME=Skakmat
+APP_NAME=Skakmat
 APP_LOGIN_URL=http://localhost:8080/index.php?page=login
 ```
 
@@ -109,7 +109,7 @@ Development Server running at http://127.0.0.1:8000
 7. Check your email inbox for welcome message (30 seconds)
 
 **Expected Email:**
-- Subject: "CheckMate - Your employee login details"
+- Subject: "Skakmat - Your employee login details"
 - Contains: Your email and temporary password
 - Has: A button to login
 
@@ -185,7 +185,7 @@ MAIL_PASSWORD=xxxx xxxx xxxx xxxx
 ## 📁 Project Structure
 
 ```
-CHECKMATE/
+SKAKMAT/
 ├── backend/
 │   ├── public/          # Web root
 │   ├── src/
@@ -254,7 +254,7 @@ CHECKMATE/
 
 ## 🎉 You're All Set!
 
-Your CheckMate system is now fully functional with:
+Your Skakmat system is now fully functional with:
 - ✅ Employee management (CRUD operations)
 - ✅ Automated email notifications
 - ✅ Interactive reporting dashboard

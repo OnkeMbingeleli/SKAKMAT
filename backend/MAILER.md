@@ -12,7 +12,7 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email@example.com
 MAIL_PASSWORD=your-smtp-or-app-password
 MAIL_FROM=your-email@example.com
-MAIL_FROM_NAME=CheckMate
+MAIL_FROM_NAME=Skakmat
 ```
 
 For Gmail, create and use a Google App Password. The `vendor` directory is

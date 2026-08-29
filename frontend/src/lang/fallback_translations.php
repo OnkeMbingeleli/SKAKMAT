@@ -1,6 +1,6 @@
 <?php
-/** CheckMate manually-reviewed fallback translations. */
-$CHECKMATE_FALLBACK_TRANSLATIONS = [
+/** Skakmat manually-reviewed fallback translations. */
+$SKAKMAT_FALLBACK_TRANSLATIONS = [
  'south_african_languages'=>['English'=>'South African languages','Afrikaans'=>'Suid-Afrikaanse tale','isiXhosa'=>'Iilwimi zoMzantsi Afrika','isiZulu'=>'Izilimi zaseNingizimu Afrika','Sepedi'=>'Maleme a Afrika Borwa','Sesotho'=>'Maleme a Afrika Borwa','Setswana'=>'Diteme tsa Aforika Borwa','siSwati'=>'Tilimi taseNingizimu Afrika','Tshivenda'=>'Nyambo dza Afurika Tshipembe','XiTsonga'=>'Tindzimi ta Afrika Dzonga'],
  'select_language'=>['English'=>'Select language','Afrikaans'=>'Kies taal','isiXhosa'=>'Khetha ulwimi','isiZulu'=>'Khetha ulimi','Sepedi'=>'Kgetha leleme','Sesotho'=>'Khetha puo','Setswana'=>'Tlhopha puo','siSwati'=>'Khetsa lulwimi','Tshivenda'=>'Nanga luambo','XiTsonga'=>'Hlawula ririmi'],
  'toggle_dark_mode'=>['English'=>'Toggle dark mode','Afrikaans'=>'Skakel donker modus','isiXhosa'=>'Vula/cima imowudi emnyama','isiZulu'=>'Vula/vala imodi emnyama','Sepedi'=>'Fetola mokgwa o fifetšego','Sesotho'=>'Fetola mokgwa o mofifi','Setswana'=>'Fetola mokgwa o o lefifi','siSwati'=>'Vula/vala imodi lemnyama','Tshivenda'=>'Shandukisa mbekanyo ya swiswi','XiTsonga'=>'Cinca mfumo wa munyama'],

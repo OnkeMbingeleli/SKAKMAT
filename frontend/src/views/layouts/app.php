@@ -4,7 +4,7 @@
  * QR codes, emergency, clock in/out, etc). Each of those views does:
  *
  *   $page = 'admin-employees';
- *   $title = 'Employees - CheckMate';
+ *   $title = 'Employees - Skakmat';
  *   ob_start();
  *   ... html ...
  *   $content = ob_get_clean();
@@ -20,7 +20,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$title = $title ?? 'CheckMate';
+$title = $title ?? 'Skakmat';
 $content = $content ?? '';
 ?>
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ $content = $content ?? '';
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body class="checkmate-app" data-page="<?= htmlspecialchars($page ?? '', ENT_QUOTES, 'UTF-8') ?>" data-role="<?= htmlspecialchars($_SESSION['user_role'] ?? 'staff', ENT_QUOTES, 'UTF-8') ?>">
+<body class="skakmat-app" data-page="<?= htmlspecialchars($page ?? '', ENT_QUOTES, 'UTF-8') ?>" data-role="<?= htmlspecialchars($_SESSION['user_role'] ?? 'staff', ENT_QUOTES, 'UTF-8') ?>">
 <div class="app-shell">
     <?php include __DIR__ . '/../partials/sidebar.php'; ?>
     <div class="main-shell">

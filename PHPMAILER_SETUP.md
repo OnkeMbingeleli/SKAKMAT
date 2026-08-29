@@ -1,4 +1,4 @@
-# PHPMailer Setup Guide for CheckMate
+# PHPMailer Setup Guide for Skakmat
 
 ## Overview
 PHPMailer 6.9.3 is bundled in `backend/vendor/phpmailer/phpmailer` and sends employee welcome emails with temporary credentials via Gmail SMTP (port 587 with STARTTLS). No Composer or separate PHPMailer installation is required.
@@ -35,8 +35,8 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-16-char-app-password
 MAIL_FROM=your-email@gmail.com
-MAIL_FROM_NAME=CheckMate
-APP_NAME=CheckMate
+MAIL_FROM_NAME=Skakmat
+APP_NAME=Skakmat
 APP_LOGIN_URL=http://localhost:8080/index.php?page=login
 ```
 

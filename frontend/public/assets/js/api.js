@@ -6,10 +6,10 @@ const API_URL = window.CONFIG?.API_URL || 'http://127.0.0.1:8000';
  */
 function getToken() {
     // Keep older sessions working while login migrates to the namespaced key.
-    const storedToken = localStorage.getItem('token') || localStorage.getItem('checkmate_token');
+    const storedToken = localStorage.getItem('token') || localStorage.getItem('skakmat_token');
     if (storedToken) return storedToken;
-    const cookie = document.cookie.split('; ').find(item => item.startsWith('checkmate_token='));
-    return cookie ? decodeURIComponent(cookie.slice('checkmate_token='.length)) : null;
+    const cookie = document.cookie.split('; ').find(item => item.startsWith('skakmat_token='));
+    return cookie ? decodeURIComponent(cookie.slice('skakmat_token='.length)) : null;
 }
 
 /**

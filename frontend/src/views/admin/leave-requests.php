@@ -1,7 +1,7 @@
 <?php
 // Admin Leave Requests: review, filter by status, approve/reject.
 $page = 'admin-leave-requests';
-$title = 'Leave Requests - CheckMate';
+$title = 'Leave Requests - Skakmat';
 ob_start();
 ?>
 

@@ -18,7 +18,7 @@ foreach ($users as $user) {
     $ok = $emailService->send(
         $user['email'],
         $user['first_name'] . ' ' . $user['last_name'],
-        'Your CheckMate weekly report',
+        'Your Skakmat weekly report',
         $html
     );
     echo ($ok ? "Sent to " : "FAILED for ") . $user['email'] . PHP_EOL;

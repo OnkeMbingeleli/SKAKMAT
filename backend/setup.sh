@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# CheckMate Backend Setup Script
+# Skakmat Backend Setup Script
 # Configures the bundled PHPMailer email sender.
 
 echo "================================"
-echo "CheckMate Backend Setup"
+echo "Skakmat Backend Setup"
 echo "================================"
 echo ""
 

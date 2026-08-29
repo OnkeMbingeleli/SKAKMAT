@@ -1,6 +1,6 @@
 <?php
 $page = 'admin-qr-code';
-$title = 'QR Codes - CheckMate';
+$title = 'QR Codes - Skakmat';
 ob_start();
 ?>
 

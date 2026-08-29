@@ -6,21 +6,21 @@ function getAppRoute(page) {
 }
 
 function saveAuth(token, user) {
-    localStorage.setItem('checkmate_token', token);
-    localStorage.setItem('checkmate_user', JSON.stringify(user));
+    localStorage.setItem('skakmat_token', token);
+    localStorage.setItem('skakmat_user', JSON.stringify(user));
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    document.cookie = `checkmate_token=${encodeURIComponent(token)}; path=/; max-age=3600`;
-    document.cookie = `checkmate_user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=3600`;
+    document.cookie = `skakmat_token=${encodeURIComponent(token)}; path=/; max-age=3600`;
+    document.cookie = `skakmat_user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=3600`;
 }
 
 function clearAuth() {
-    localStorage.removeItem('checkmate_token');
-    localStorage.removeItem('checkmate_user');
+    localStorage.removeItem('skakmat_token');
+    localStorage.removeItem('skakmat_user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    document.cookie = 'checkmate_token=; path=/; max-age=0';
-    document.cookie = 'checkmate_user=; path=/; max-age=0';
+    document.cookie = 'skakmat_token=; path=/; max-age=0';
+    document.cookie = 'skakmat_user=; path=/; max-age=0';
 }
 
 // Tab switching

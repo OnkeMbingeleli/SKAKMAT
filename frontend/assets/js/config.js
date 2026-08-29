@@ -5,10 +5,10 @@ const IS_PRODUCTION = !['localhost', '127.0.0.1'].includes(window.location.hostn
 
 const CONFIG = {
     API_URL: IS_PRODUCTION
-        ? 'https://api.checkmate.app'  // Update with your production URL
+        ? 'https://api.skakmat.app'  // Update with your production URL
         : 'http://127.0.0.1:8000',
 
-    STORAGE_PREFIX: 'checkmate_',
+    STORAGE_PREFIX: 'skakmat_',
     TOKEN_KEY: 'token',
     USER_KEY: 'user'
 };

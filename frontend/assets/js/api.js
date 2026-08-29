@@ -6,10 +6,10 @@ const API_URL = window.CONFIG?.API_URL || 'http://127.0.0.1:8000';
  */
 function getToken() {
     // Keep older sessions working while login migrates to the namespaced key.
-    const storedToken = localStorage.getItem('token') || localStorage.getItem('checkmate_token');
+    const storedToken = localStorage.getItem('token') || localStorage.getItem('skakmat_token');
     if (storedToken) return storedToken;
-    const cookie = document.cookie.split('; ').find(item => item.startsWith('checkmate_token='));
-    return cookie ? decodeURIComponent(cookie.slice('checkmate_token='.length)) : null;
+    const cookie = document.cookie.split('; ').find(item => item.startsWith('skakmat_token='));
+    return cookie ? decodeURIComponent(cookie.slice('skakmat_token='.length)) : null;
 }
 
 /**
@@ -61,8 +61,8 @@ async function login(email, password) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    document.cookie = 'checkmate_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'checkmate_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'skakmat_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'skakmat_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     const entryPoint = window.location.pathname.includes('/public/')
         ? '/public/index.php'
         : '/index.php';

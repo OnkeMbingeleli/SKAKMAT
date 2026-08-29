@@ -9,11 +9,11 @@ if (isset($_GET['token']) && isset($_GET['user'])) {
     $token = $_GET['token'];
     $userData = $_GET['user'];
 
-    setcookie('checkmate_token', $token, time() + 3600, '/');
-    setcookie('checkmate_user', $userData, time() + 3600, '/');
+    setcookie('skakmat_token', $token, time() + 3600, '/');
+    setcookie('skakmat_user', $userData, time() + 3600, '/');
 
-    $_COOKIE['checkmate_token'] = $token;
-    $_COOKIE['checkmate_user'] = $userData;
+    $_COOKIE['skakmat_token'] = $token;
+    $_COOKIE['skakmat_user'] = $userData;
 
     $decodedUser = json_decode($userData, true);
     if (is_array($decodedUser)) {

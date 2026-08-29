@@ -13,7 +13,7 @@
 
     function isDarkSaved() {
         try {
-            return localStorage.getItem('checkmate_dark_mode') === 'true' || localStorage.getItem('checkmate_dark_mode') === '1';
+            return localStorage.getItem('skakmat_dark_mode') === 'true' || localStorage.getItem('skakmat_dark_mode') === '1';
         } catch (e) {
             return false;
         }
@@ -27,7 +27,7 @@
         document.body.classList.toggle('dark', enabled);
         document.body.classList.toggle('dark-mode', enabled);
         try {
-            localStorage.setItem('checkmate_dark_mode', enabled ? 'true' : 'false');
+            localStorage.setItem('skakmat_dark_mode', enabled ? 'true' : 'false');
         } catch (e) { /* ignore */ }
 
         var btn = document.getElementById('headerDarkModeBtn');
@@ -39,7 +39,7 @@
         var switchInput = document.getElementById('prefDarkMode');
         if (switchInput) switchInput.checked = enabled;
 
-        window.dispatchEvent(new CustomEvent('checkmateDarkModeChanged', { detail: { enabled: enabled } }));
+        window.dispatchEvent(new CustomEvent('skakmatDarkModeChanged', { detail: { enabled: enabled } }));
     }
 
     function tickClock() {
@@ -105,7 +105,7 @@
                 lastNotificationIds = pending.map(function (r) { return r.id; });
             } else {
                 var seen = [];
-                try { seen = JSON.parse(localStorage.getItem('checkmate_seen_leave_decisions') || '[]'); } catch (e) { /* ignore */ }
+                try { seen = JSON.parse(localStorage.getItem('skakmat_seen_leave_decisions') || '[]'); } catch (e) { /* ignore */ }
                 var decided = rows.filter(function (r) { return r.status !== 'pending' && seen.indexOf(r.id) === -1; });
                 setNotificationCount(decided.length);
                 lastNotificationIds = decided.map(function (r) { return r.id; });
@@ -141,9 +141,9 @@
             // doesn't show the same ones forever.
             if (role !== 'admin' && lastNotificationIds.length) {
                 try {
-                    var seen = JSON.parse(localStorage.getItem('checkmate_seen_leave_decisions') || '[]');
+                    var seen = JSON.parse(localStorage.getItem('skakmat_seen_leave_decisions') || '[]');
                     var merged = seen.concat(lastNotificationIds);
-                    localStorage.setItem('checkmate_seen_leave_decisions', JSON.stringify(merged));
+                    localStorage.setItem('skakmat_seen_leave_decisions', JSON.stringify(merged));
                 } catch (e) { /* ignore */ }
                 setNotificationCount(0);
             }
@@ -188,12 +188,12 @@
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         } catch (e) { /* ignore */ }
-        document.cookie = 'checkmate_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        document.cookie = 'checkmate_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'skakmat_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'skakmat_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         var entryPoint = window.location.pathname.includes('/public/') ? '/public/index.php' : '/index.php';
         window.location.href = entryPoint + '?page=login';
     }
-    window.checkmateLogout = doLogout;
+    window.skakmatLogout = doLogout;
 
     window.addEventListener('click', function () { closeAllMenus(); });
 
@@ -242,7 +242,7 @@ window.updatePreferences = window.updatePreferences || async function updatePref
         var user = JSON.parse(localStorage.getItem('user') || '{}');
         Object.assign(user, prefs);
         localStorage.setItem('user', JSON.stringify(user));
-        document.cookie = 'checkmate_user=' + encodeURIComponent(JSON.stringify(user)) + '; path=/; max-age=3600';
+        document.cookie = 'skakmat_user=' + encodeURIComponent(JSON.stringify(user)) + '; path=/; max-age=3600';
     } catch (e) { /* ignore */ }
     return { success: true };
 };

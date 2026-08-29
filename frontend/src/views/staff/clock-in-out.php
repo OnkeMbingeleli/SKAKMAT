@@ -1,6 +1,6 @@
 <?php
 $page = 'clock-in-out';
-$title = 'Clock In / Out - CheckMate';
+$title = 'Clock In / Out - Skakmat';
 
 ob_start();
 ?>

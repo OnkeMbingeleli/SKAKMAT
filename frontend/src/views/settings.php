@@ -10,9 +10,9 @@ if (session_status() === PHP_SESSION_NONE) {
 |--------------------------------------------------------------------------
 */
 
-if (!empty($_COOKIE['checkmate_user'])) {
+if (!empty($_COOKIE['skakmat_user'])) {
 
-    $user = json_decode($_COOKIE['checkmate_user'], true);
+    $user = json_decode($_COOKIE['skakmat_user'], true);
 
     if (is_array($user)) {
 
@@ -190,7 +190,7 @@ $darkModeOn =
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Settings · CheckMate</title>
+    <title>Settings · Skakmat</title>
 
     <link
         rel="stylesheet"
@@ -1534,7 +1534,7 @@ include __DIR__ . '/partials/header.php';
         if (saveLocal) {
 
             localStorage.setItem(
-                'checkmate_dark_mode',
+                'skakmat_dark_mode',
                 isEnabled
                     ? 'true'
                     : 'false'
@@ -1552,7 +1552,7 @@ include __DIR__ . '/partials/header.php';
 
     const savedDarkMode =
         localStorage.getItem(
-            'checkmate_dark_mode'
+            'skakmat_dark_mode'
         );
 
 
@@ -1830,7 +1830,7 @@ include __DIR__ . '/partials/header.php';
 
 
             document.cookie =
-                'checkmate_user=' +
+                'skakmat_user=' +
                 encodeURIComponent(
                     JSON.stringify(
                         mergedUser
@@ -2474,7 +2474,7 @@ include __DIR__ . '/partials/header.php';
     */
 
     window.addEventListener(
-        'checkmateDarkModeChanged',
+        'skakmatDarkModeChanged',
         function (event) {
 
             const enabled =

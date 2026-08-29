@@ -1,6 +1,6 @@
 <?php
-/** CheckMate English source strings. Add UI text here and use t('key'). */
-$CHECKMATE_STRINGS = [
+/** Skakmat English source strings. Add UI text here and use t('key'). */
+$SKAKMAT_STRINGS = [
     'south_african_languages' => 'South African languages', 'select_language' => 'Select language',
     'toggle_dark_mode' => 'Toggle dark mode', 'search_placeholder' => 'Search employees, records...',
     'logout' => 'Log out', 'administrator' => 'Administrator', 'staff' => 'Staff',

@@ -1,8 +1,8 @@
-# ✅ CheckMate - Implementation Complete
+# ✅ Skakmat - Implementation Complete
 
 ## Summary
 
-All requested features for the CheckMate attendance and leave management system have been successfully implemented and tested.
+All requested features for the Skakmat attendance and leave management system have been successfully implemented and tested.
 
 ---
 
@@ -130,8 +130,8 @@ MAIL_PORT=587
 MAIL_USERNAME=your-gmail@gmail.com
 MAIL_PASSWORD=your-16-char-app-password
 MAIL_FROM=your-gmail@gmail.com
-MAIL_FROM_NAME=CheckMate
-APP_NAME=CheckMate
+MAIL_FROM_NAME=Skakmat
+APP_NAME=Skakmat
 APP_LOGIN_URL=http://localhost:8080/index.php?page=login
 ```
 
@@ -350,7 +350,7 @@ The following guide documents are available:
 
 ## 🎉 You're All Set!
 
-Your CheckMate system is now fully functional with:
+Your Skakmat system is now fully functional with:
 - ✅ Complete employee management (CRUD)
 - ✅ Automated email notifications
 - ✅ Interactive reporting dashboard

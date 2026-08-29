@@ -3,12 +3,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (empty($_COOKIE['checkmate_token'])) {
+if (empty($_COOKIE['skakmat_token'])) {
     header('Location: /public/index.php?page=login');
     exit;
 }
 
-$user = !empty($_COOKIE['checkmate_user']) ? json_decode($_COOKIE['checkmate_user'], true) : [];
+$user = !empty($_COOKIE['skakmat_user']) ? json_decode($_COOKIE['skakmat_user'], true) : [];
 $role = ($user['role'] ?? $_SESSION['user_role'] ?? 'staff') === 'admin' ? 'admin' : 'staff';
 $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: ($_SESSION['user_name'] ?? 'there');
 $_SESSION['user_role'] = $role;
@@ -19,7 +19,7 @@ $_SESSION['user_name'] = $name;
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Attendance history | CheckMate</title>
+    <title>Attendance history | Skakmat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">

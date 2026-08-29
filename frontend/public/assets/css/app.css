@@ -1214,7 +1214,7 @@ body.dark .nav-item:hover:not(.active) {
     .filters label { min-width: min(100%, 220px); flex: 1 1 180px; }
 }
 
-/* ===== Final CheckMate polish: approved brand colour (olive green / teal) ===== */
+/* ===== Final Skakmat polish: approved brand colour (olive green / teal) ===== */
 :root {
     --teal: #0B574C;
     --teal-dark: #0A5348;

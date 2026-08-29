@@ -17,11 +17,11 @@ class Mailer
             $to === '' ||
             !filter_var($to, FILTER_VALIDATE_EMAIL)
         ) {
-            error_log('CheckMate Mailer: invalid recipient email.');
+            error_log('Skakmat Mailer: invalid recipient email.');
             return false;
         }
 
-        $appName = getenv('APP_NAME') ?: 'CheckMate';
+        $appName = getenv('APP_NAME') ?: 'Skakmat';
 
         $loginUrl = getenv('APP_LOGIN_URL')
             ?: 'http://localhost:8000/index.php?page=login';
@@ -55,7 +55,7 @@ class Mailer
             $fromAddress === ''
         ) {
             error_log(
-                'CheckMate Mailer: SMTP credentials are missing.'
+                'Skakmat Mailer: SMTP credentials are missing.'
             );
 
             return false;
@@ -175,7 +175,7 @@ class Mailer
             font-weight:700;
         "
     >
-        Sign in to CheckMate
+        Sign in to Skakmat
     </a>
 
     <p style="
@@ -244,7 +244,7 @@ HTML;
 
         } catch (Exception $e) {
             error_log(
-                'CheckMate Mailer error: ' .
+                'Skakmat Mailer error: ' .
                 $mail->ErrorInfo
             );
 

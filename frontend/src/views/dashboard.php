@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 $page = 'dashboard';
-$title = 'Dashboard - CheckMate';
+$title = 'Dashboard - Skakmat';
 $role = $_SESSION['user_role'] ?? 'admin';
 $name = $_SESSION['user_name'] ?? 'Admin User';
 $firstName = explode(' ', trim($name))[0] ?: 'User';

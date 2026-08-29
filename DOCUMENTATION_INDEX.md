@@ -1,4 +1,4 @@
-# CheckMate - Complete Documentation Index
+# Skakmat - Complete Documentation Index
 
 ## 🚀 START HERE
 

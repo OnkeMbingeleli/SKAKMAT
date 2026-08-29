@@ -12,7 +12,7 @@ if ($baseUrl === '/' || $baseUrl === '.') {
     $baseUrl = '';
 }
 
-if (empty($_COOKIE['checkmate_token'])) {
+if (empty($_COOKIE['skakmat_token'])) {
     header('Location: ' . $baseUrl . '/index.php?page=login');
     exit;
 }
@@ -21,8 +21,8 @@ if (isset($_GET['role']) && in_array($_GET['role'], ['admin', 'staff'], true)) {
     $_SESSION['user_role'] = $_GET['role'];
 }
 
-if (empty($_SESSION['user_role']) && !empty($_COOKIE['checkmate_user'])) {
-    $user = json_decode($_COOKIE['checkmate_user'], true);
+if (empty($_SESSION['user_role']) && !empty($_COOKIE['skakmat_user'])) {
+    $user = json_decode($_COOKIE['skakmat_user'], true);
     if ($user) {
         $_SESSION['user_role'] = $user['role'] ?? 'staff';
         $_SESSION['user_name'] = trim(($user['first_name'] ?? 'User') . ' ' . ($user['last_name'] ?? ''));
@@ -80,7 +80,7 @@ function navIcon(string $icon): string
     <div class="brand">
         <div class="brand-mark" aria-hidden="true"></div>
         <div>
-            <strong>CheckMate</strong>
+            <strong>Skakmat</strong>
             <small>ATTENDANCEHUB</small>
         </div>
     </div>

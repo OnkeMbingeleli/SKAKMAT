@@ -1,6 +1,6 @@
 <?php
 $page = 'admin-emergency';
-$title = 'Emergency - CheckMate';
+$title = 'Emergency - Skakmat';
 ob_start();
 ?>
 
@@ -165,10 +165,10 @@ let currentEmergency = null; // { emergency, summary, roll_call } or null
 let pollTimer = null;
 
 function getToken() {
-    const storedToken = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('checkmate_token');
+    const storedToken = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('skakmat_token');
     if (storedToken) return storedToken;
-    const cookie = document.cookie.split('; ').find(item => item.startsWith('checkmate_token='));
-    return cookie ? decodeURIComponent(cookie.slice('checkmate_token='.length)) : null;
+    const cookie = document.cookie.split('; ').find(item => item.startsWith('skakmat_token='));
+    return cookie ? decodeURIComponent(cookie.slice('skakmat_token='.length)) : null;
 }
 
 function buildHeaders(extra = {}) {

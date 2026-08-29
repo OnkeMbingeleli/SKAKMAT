@@ -226,7 +226,7 @@ class UserController
             try {
                 $this->userModel->deleteUser($id);
             } catch (\Throwable $cleanupError) {
-                error_log('CheckMate createStaff cleanup failed: ' . $cleanupError->getMessage());
+                error_log('Skakmat createStaff cleanup failed: ' . $cleanupError->getMessage());
             }
             jsonResponse([
                 'success' => false,

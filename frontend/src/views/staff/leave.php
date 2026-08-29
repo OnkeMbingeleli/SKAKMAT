@@ -1,7 +1,7 @@
 <?php
 // Staff Leave: submit a leave request, see RSA leave balance, view own history.
 $page = 'staff-leave';
-$title = 'Leave - CheckMate';
+$title = 'Leave - Skakmat';
 ob_start();
 ?>
 

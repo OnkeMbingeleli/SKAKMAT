@@ -10,7 +10,7 @@
 
     function isDarkSaved() {
         try {
-            return localStorage.getItem('checkmate_dark_mode') === 'true';
+            return localStorage.getItem('skakmat_dark_mode') === 'true';
         } catch (e) {
             return false;
         }
@@ -26,7 +26,7 @@
         document.body.classList.toggle('dark', enabled);
         document.body.classList.toggle('dark-mode', enabled);
         try {
-            localStorage.setItem('checkmate_dark_mode', enabled ? 'true' : 'false');
+            localStorage.setItem('skakmat_dark_mode', enabled ? 'true' : 'false');
         } catch (e) { /* ignore */ }
 
         var btn = document.getElementById('headerDarkModeBtn');
@@ -35,7 +35,7 @@
             btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
         }
 
-        window.dispatchEvent(new CustomEvent('checkmateDarkModeChanged', { detail: { enabled: enabled } }));
+        window.dispatchEvent(new CustomEvent('skakmatDarkModeChanged', { detail: { enabled: enabled } }));
     }
 
     function tickClock() {
@@ -83,7 +83,7 @@ window.updatePreferences = window.updatePreferences || async function updatePref
         var user = JSON.parse(localStorage.getItem('user') || '{}');
         Object.assign(user, prefs);
         localStorage.setItem('user', JSON.stringify(user));
-        document.cookie = 'checkmate_user=' + encodeURIComponent(JSON.stringify(user)) + '; path=/; max-age=3600';
+        document.cookie = 'skakmat_user=' + encodeURIComponent(JSON.stringify(user)) + '; path=/; max-age=3600';
     } catch (e) { /* ignore */ }
     return { success: true };
 };

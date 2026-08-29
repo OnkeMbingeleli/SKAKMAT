@@ -38,7 +38,7 @@
             document.body.classList.toggle('dark', isDark);
             document.documentElement.classList.toggle('cm-dark', isDark);
             darkToggle.classList.toggle('active', isDark);
-            localStorage.setItem('checkmate_dark_mode', String(isDark));
+            localStorage.setItem('skakmat_dark_mode', String(isDark));
             if (typeof updatePreferences === 'function') {
                 await updatePreferences({ dark_mode: isDark });
             }
@@ -57,7 +57,7 @@
             opt.addEventListener('click', e => {
                 e.stopPropagation();
                 const lang = opt.dataset.language;
-                localStorage.setItem('checkmate_language', lang);
+                localStorage.setItem('skakmat_language', lang);
                 // reload or apply translations
                 window.location.reload();
             });
@@ -86,8 +86,8 @@
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            document.cookie = 'checkmate_token=; path=/; max-age=0';
-            document.cookie = 'checkmate_user=; path=/; max-age=0';
+            document.cookie = 'skakmat_token=; path=/; max-age=0';
+            document.cookie = 'skakmat_user=; path=/; max-age=0';
             window.location.replace('index.php?page=login');
         });
     }
